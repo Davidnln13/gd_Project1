@@ -10,4 +10,5 @@ function main()
   gameNamespace.game = g;
   g.initWorld();
 
+
 }
