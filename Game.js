@@ -13,12 +13,9 @@ class Game
   */
   initWorld()
   {
-
+    //starting positions of individual divs
     gameNamespace.posOne = 0;
     gameNamespace.posTwo = -880;
-    //backgrounds
-    gameNamespace.backgroundOneDiv;
-    gameNamespace.backgroundTwoDiv;
     //enum
     gameNamespace.GamestateEnum = {
                                     MAIN:0,
@@ -29,7 +26,7 @@ class Game
                                   }
     gameNamespace.gamestate = gameNamespace.GamestateEnum.MAIN;
     gameNamespace.mouseX = -100;
-    gameNamespace.mouseY = -100
+    gameNamespace.mouseY = -100;
 
     //different screens
     gameNamespace.mainMenu = new MainMenu();
@@ -39,16 +36,21 @@ class Game
     gameNamespace.exitMenu = new ExitMenu();
 
     //context
-    gameNamespace.ctx
+    gameNamespace.ctx;
     //initialise canvas
-    this.initCanvas()
-    gameNamespace.canvas.addEventListener("touchstart", this.onTouchStart.bind(this))
-    console.log("Initialising Game World")
-    this.background();
+    this.initCanvas();
+    gameNamespace.canvas.addEventListener("touchstart", this.onTouchStart.bind(this));
+    console.log("Initialising Game World");
+    //creates both divs
+    this.createImageDiv("backgroundOneDiv");
+    this.createImageDiv("backgroundTwoDiv");
+    //turn off mouse events
+    document.getElementById("backgroundOneDiv").style.pointerEvents = "none";
+    document.getElementById("backgroundTwoDiv").style.pointerEvents = "none";
 
     gameNamespace.game.update();
-    //this.ctx.addEventListener("touchmove", this.onTouchMove.bind(this));
-  //  this.ctx.addEventListener("touchend", onTouchEnd);
+    ///this.ctx.addEventListener("touchmove", this.onTouchMove.bind(this));
+  ///  this.ctx.addEventListener("touchend", onTouchEnd);
     window.addEventListener("keydown", function(e)
       {
           // Space and arrow keys
@@ -75,11 +77,12 @@ class Game
    {
      gameNamespace.posTwo = -880;
    }
+
    gameNamespace.posOne++;
-   gameNamespace.backgroundOneDiv.style.top = gameNamespace.posOne + 'px';
+   document.getElementById("backgroundOneDiv").style.top = gameNamespace.posOne + 'px';
 
    gameNamespace.posTwo++;
-   gameNamespace.backgroundTwoDiv.style.top = gameNamespace.posTwo +'px';
+   document.getElementById("backgroundTwoDiv").style.top = gameNamespace.posTwo + 'px';
    gameNamespace.game.draw();
    //update menus
    if(gameNamespace.gamestate === gameNamespace.GamestateEnum.MAIN)
@@ -154,21 +157,15 @@ initCanvas()
   gameNamespace.ctx = gameNamespace.canvas.getContext("2d");
 
 }
-background()
+createImageDiv(divID)
 {
-  gameNamespace.backgroundOneDiv = document.createElement("div");
-  gameNamespace.backgroundOneDiv.innerHTML='<img src=./Resources/Images/background.png>';
-  gameNamespace.backgroundOneDiv.style.left=0;
-  gameNamespace.backgroundOneDiv.style.top = 0;
-  gameNamespace.backgroundOneDiv.style.position = "absolute";
-  document.body.appendChild(gameNamespace.backgroundOneDiv);
-
-  gameNamespace.backgroundTwoDiv = document.createElement("div");
-  gameNamespace.backgroundTwoDiv.innerHTML='<img src=./Resources/Images/background.png>';
-  gameNamespace.backgroundTwoDiv.style.left=0;
-  gameNamespace.backgroundTwoDiv.style.top = 0  ;
-  gameNamespace.backgroundTwoDiv.style.position = "absolute";
-  document.body.appendChild(gameNamespace.backgroundTwoDiv);
+  var div = document.createElement("div");
+  div.innerHTML = '<img src=./Resources/Images/background.png>';
+  div.id = divID;
+  div.style.left=0;
+  div.style.top=0;
+  div.style.position='absolute';
+  document.body.appendChild(div);
 }
 /**
 * ontouchstart
