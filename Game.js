@@ -39,18 +39,35 @@ class Game
     gameNamespace.ctx;
     //initialise canvas
     this.initCanvas();
-    gameNamespace.canvas.addEventListener("touchstart", this.onTouchStart.bind(this));
+
     console.log("Initialising Game World");
-    //creates both divs
-    this.createImageDiv("backgroundOneDiv");
-    this.createImageDiv("backgroundTwoDiv");
+
+    //creates both background divs
+    this.createDiv('<img src=./Resources/Images/background.png>',"backgroundOneDiv",0,0);
+    this.createDiv('<img src=./Resources/Images/background.png>',"backgroundTwoDiv",0,0);
+
+    //Text Divs
+    this.createDiv('Space Runner',"MAIN",110,100);
+    this.createDiv("PLAY","GAME",110,300);
+    this.createDiv("OPTIONS","OPTIONS",110,350);
+    this.createDiv("HIGHSCORE","HIGHSCORE",110,400);
+    this.createDiv("EXIT","EXIT",110,450);
+
     //turn off mouse events
     document.getElementById("backgroundOneDiv").style.pointerEvents = "none";
     document.getElementById("backgroundTwoDiv").style.pointerEvents = "none";
 
+    //font and font size of Divs
+    gameNamespace.game.divFontColourSize("MAIN","impact","white","48");
+    gameNamespace.game.divFontColourSize("GAME","impact","white","38");
+    gameNamespace.game.divFontColourSize("OPTIONS","impact","white","38");
+    gameNamespace.game.divFontColourSize("HIGHSCORE","impact","white","38");
+    gameNamespace.game.divFontColourSize("EXIT","impact","white","38");
+
     gameNamespace.game.update();
     ///this.ctx.addEventListener("touchmove", this.onTouchMove.bind(this));
-  ///  this.ctx.addEventListener("touchend", onTouchEnd);
+    ///this.ctx.addEventListener("touchend", onTouchEnd);
+  //  gameNamespace.canvas.addEventListener("touchstart", this.onTouchStart.bind(this));
     window.addEventListener("keydown", function(e)
       {
           // Space and arrow keys
@@ -68,7 +85,6 @@ class Game
  */
  update()
  {
-   console.log(gameNamespace.posOne, gameNamespace.posTwo);
    if(gameNamespace.posOne > 880)
    {
      gameNamespace.posOne = 0-880;
@@ -91,7 +107,7 @@ class Game
    }
    if(gameNamespace.gamestate === gameNamespace.GamestateEnum.GAME)
    {
-       gameNamespace.gameMenu.update();
+      gameNamespace.gameMenu.update();
    }
    if(gameNamespace.gamestate === gameNamespace.GamestateEnum.OPTIONS)
    {
@@ -157,26 +173,43 @@ initCanvas()
   gameNamespace.ctx = gameNamespace.canvas.getContext("2d");
 
 }
-createImageDiv(divID)
+createDiv(divType,divID,divPosX,divPosY,clickable)
 {
   var div = document.createElement("div");
-  div.innerHTML = '<img src=./Resources/Images/background.png>';
+  div.innerHTML = divType;
   div.id = divID;
-  div.style.left=0;
-  div.style.top=0;
+  div.style.left=divPosX + 'px';
+  div.style.top=divPosY+ 'px';
   div.style.position='absolute';
+  //if(clickable === true)
+    div.addEventListener("touchstart", gameNamespace.game.onTouchStart.bind(null,divID));
+    div.addEventListener("touchend", gameNamespace.game.onTouchEnd.bind(null,divID));
   document.body.appendChild(div);
+}
+divFontColourSize(name,font,colour,size)
+{
+  document.getElementById(name).style.color = colour;
+  document.getElementById(name).style.font = size + "px " + font;
 }
 /**
 * ontouchstart
 * @desc prints the starting position also saves that position and the time of the touch
 */
-onTouchStart(e)
+onTouchStart(id,e)
 {
     e.preventDefault();
     var touches = e.touches;
-    gameNamespace.mouseX = touches[0].clientX;
-    gameNamespace.mouseY = touches[0].clientY;
+    gameNamespace.gamestate = gameNamespace.GamestateEnum.id;
+
+    //document.getElementById(id).style.visibility = "hidden";
+    if(id === "GAME")
+    {
+      gameNamespace.gamestate = gameNamespace.GamestateEnum.GAME;
+    }
+    if(id !== "MAIN")
+      gameNamespace.game.divFontColourSize(id,"impact","yellow","38");
+  //  gameNamespace.mouseX = touches[0].clientX;
+  //  gameNamespace.mouseY = touches[0].clientY;
 }
 /**
 * onTouchMove
@@ -190,8 +223,14 @@ onTouchMove(e)
 * onTouchEnd
 * @desc outputs the time difference, the length of the line also then decides if the line was a swipe based on its size and time if it is a swipe it writes to the screen swipe detected
 */
-onTouchEnd(e)
+onTouchEnd(id,e)
 {
+  var touches = e.touches;
+  //document.getElementById(id).style.visibility = "visible";
 
+  if(id !== "MAIN")
+
+    gameNamespace.game.divFontColourSize(id,"impact","white","38");
+//  gameNamespace.mouseX = touches[0].clientX;
 }
 }
