@@ -25,8 +25,8 @@ class Game
                                     EXIT:4
                                   }
     gameNamespace.gamestate = gameNamespace.GamestateEnum.MAIN;
-    gameNamespace.mouseX = -100;
-    gameNamespace.mouseY = -100;
+    // gameNamespace.mouseX = -100;
+    // gameNamespace.mouseY = -100;
 
     //different screens
     gameNamespace.mainMenu = new MainMenu();
@@ -42,20 +42,19 @@ class Game
 
     console.log("Initialising Game World");
 
+    gameNamespace.canvas.addEventListener("touchstart", gameNamespace.game.PreventingDefaults);
+
     //creates both background divs
-    this.createDiv('<img src=./Resources/Images/background.png>',"backgroundOneDiv",0,0);
-    this.createDiv('<img src=./Resources/Images/background.png>',"backgroundTwoDiv",0,0);
-
+    this.createDiv('<img src=./Resources/Images/background.png>',"backgroundOneDiv",0,0,false);
+    this.createDiv('<img src=./Resources/Images/background.png>',"backgroundTwoDiv",0,0,false);
     //Text Divs
-    this.createDiv('Space Runner',"MAIN",110,100);
-    this.createDiv("PLAY","GAME",110,300);
-    this.createDiv("OPTIONS","OPTIONS",110,350);
-    this.createDiv("HIGHSCORE","HIGHSCORE",110,400);
-    this.createDiv("EXIT","EXIT",110,450);
+    this.createDiv('Space Runner',"MAIN",110,100,true);
+    this.createDiv("PLAY","GAME",110,300,true);
+    this.createDiv("OPTIONS","OPTIONS",110,350,true);
+    this.createDiv("HIGHSCORE","HIGHSCORE",110,400,true);
+    this.createDiv("EXIT","EXIT",110,450,true);
 
-    //turn off mouse events
-    document.getElementById("backgroundOneDiv").style.pointerEvents = "none";
-    document.getElementById("backgroundTwoDiv").style.pointerEvents = "none";
+
 
     //font and font size of Divs
     gameNamespace.game.divFontColourSize("MAIN","impact","white","48");
@@ -181,15 +180,24 @@ createDiv(divType,divID,divPosX,divPosY,clickable)
   div.style.left=divPosX + 'px';
   div.style.top=divPosY+ 'px';
   div.style.position='absolute';
-  //if(clickable === true)
+  if(clickable === true)
+  {
     div.addEventListener("touchstart", gameNamespace.game.onTouchStart.bind(null,divID));
     div.addEventListener("touchend", gameNamespace.game.onTouchEnd.bind(null,divID));
+  }
+  else {
+     div.style.pointerEvents = "none";
+  }
   document.body.appendChild(div);
 }
 divFontColourSize(name,font,colour,size)
 {
   document.getElementById(name).style.color = colour;
   document.getElementById(name).style.font = size + "px " + font;
+}
+PreventingDefaults(e)
+{
+  e.preventDefault();
 }
 /**
 * ontouchstart
