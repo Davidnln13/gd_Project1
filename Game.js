@@ -21,17 +21,17 @@ class Game
                                     MAIN:0,
                                     GAME:1,
                                     OPTIONS:2,
-                                    HIGHSCORE:3,
-                                    EXIT:4
+                                    TUTORIAL:3,
+                                    HIGHSCORE:4,
+                                    EXIT:5
                                   }
     gameNamespace.gamestate = gameNamespace.GamestateEnum.MAIN;
-    // gameNamespace.mouseX = -100;
-    // gameNamespace.mouseY = -100;
 
     //different screens
     gameNamespace.mainMenu = new MainMenu();
     gameNamespace.gameMenu = new GameMenu();
     gameNamespace.optionsMenu = new OptionsMenu();
+    gameNamespace.tutorialMenu = new TutorialMenu();
     gameNamespace.highscoreMenu = new HighscoreMenu();
     gameNamespace.exitMenu = new ExitMenu();
 
@@ -51,15 +51,17 @@ class Game
     this.createDiv('Space Runner',"MAIN",110,100,true);
     this.createDiv("PLAY","GAME",110,300,true);
     this.createDiv("OPTIONS","OPTIONS",110,350,true);
-    this.createDiv("HIGHSCORE","HIGHSCORE",110,400,true);
-    this.createDiv("EXIT","EXIT",110,450,true);
-
-
+    this.createDiv("TUTORIAL","TUTORIAL",110,400,true);
+    this.createDiv("HIGHSCORE","HIGHSCORE",110,450,true);
+    this.createDiv("EXIT","EXIT",110,500,true);
+    //list to hold text divs on main menu
+    gameNamespace.mainMenuTextDivs = ["MAIN","GAME","OPTIONS","TUTORIAL","HIGHSCORE","EXIT"];
 
     //font and font size of Divs
     gameNamespace.game.divFontColourSize("MAIN","impact","white","48");
     gameNamespace.game.divFontColourSize("GAME","impact","white","38");
     gameNamespace.game.divFontColourSize("OPTIONS","impact","white","38");
+    gameNamespace.game.divFontColourSize("TUTORIAL","impact","white","38");
     gameNamespace.game.divFontColourSize("HIGHSCORE","impact","white","38");
     gameNamespace.game.divFontColourSize("EXIT","impact","white","38");
 
@@ -84,6 +86,7 @@ class Game
  */
  update()
  {
+   //resets background
    if(gameNamespace.posOne > 880)
    {
      gameNamespace.posOne = 0-880;
@@ -92,7 +95,7 @@ class Game
    {
      gameNamespace.posTwo = -880;
    }
-
+   //incrementing background
    gameNamespace.posOne++;
    document.getElementById("backgroundOneDiv").style.top = gameNamespace.posOne + 'px';
 
@@ -104,6 +107,14 @@ class Game
    {
        gameNamespace.mainMenu.update();
    }
+   else
+   {
+     for(var i =0; i< gameNamespace.mainMenuTextDivs.length; i++)
+     {
+        //document.getElementById(gameNamespace.mainMenuTextDivs[i]).style.visibility = "hidden";
+     }
+   }
+
    if(gameNamespace.gamestate === gameNamespace.GamestateEnum.GAME)
    {
       gameNamespace.gameMenu.update();
@@ -111,6 +122,10 @@ class Game
    if(gameNamespace.gamestate === gameNamespace.GamestateEnum.OPTIONS)
    {
        gameNamespace.optionsMenu.update();
+   }
+   if(gameNamespace.gamestate === gameNamespace.GamestateEnum.TUTORIAL)
+   {
+       gameNamespace.tutorialMenu.update();
    }
    if(gameNamespace.gamestate === gameNamespace.GamestateEnum.HIGHSCORE)
    {
@@ -133,10 +148,6 @@ class Game
 
    gameNamespace.ctx.clearRect(0,0,window.innerWidth, window.innerHeight);
 
-   // gameNamespace.ctx.fillStyle = '#FF0000';
-   // gameNamespace.ctx.fillRect(gameNamespace.mouseX,gameNamespace.mouseY,5,5);
-   // console.log(gameNamespace.mouseX,gameNamespace.mouseY);
-
    if(gameNamespace.gamestate === gameNamespace.GamestateEnum.MAIN)
    {
      gameNamespace.mainMenu.draw();
@@ -148,6 +159,10 @@ class Game
    if(gameNamespace.gamestate === gameNamespace.GamestateEnum.OPTIONS)
    {
      gameNamespace.optionsMenu.draw();
+   }
+   if(gameNamespace.gamestate === gameNamespace.GamestateEnum.TUTORIAL)
+   {
+       gameNamespace.tutorialMenu.draw();
    }
    if(gameNamespace.gamestate === gameNamespace.GamestateEnum.HIGHSCORE)
    {
@@ -172,6 +187,22 @@ initCanvas()
   gameNamespace.ctx = gameNamespace.canvas.getContext("2d");
 
 }
+//flips the passed in divs visibilty
+flipVisibility(divsToFlip)
+{
+  for(var i = 0; i < divsToFlip.length; i++)
+  {
+    if(document.getElementById(divsToFlip[i]).style.visibility = "visible")
+    {
+      document.getElementById(divsToFlip[i]).style.visibility = "hidden";
+    }
+    else {
+      document.getElementById(divsToFlip[i]).style.visibility = "visible";
+    }
+
+  }
+}
+//creates a div passing in the html the id its position and whether its clickable
 createDiv(divType,divID,divPosX,divPosY,clickable)
 {
   var div = document.createElement("div");
@@ -190,11 +221,13 @@ createDiv(divType,divID,divPosX,divPosY,clickable)
   }
   document.body.appendChild(div);
 }
+//changes font colour and size useful for clicking on divs
 divFontColourSize(name,font,colour,size)
 {
   document.getElementById(name).style.color = colour;
   document.getElementById(name).style.font = size + "px " + font;
 }
+//currently just prevents the screen from moving
 PreventingDefaults(e)
 {
   e.preventDefault();
@@ -207,17 +240,28 @@ onTouchStart(id,e)
 {
     e.preventDefault();
     var touches = e.touches;
-    gameNamespace.gamestate = gameNamespace.GamestateEnum.id;
-
-    //document.getElementById(id).style.visibility = "hidden";
-    if(id === "GAME")
+    if("GAME" === id)
     {
       gameNamespace.gamestate = gameNamespace.GamestateEnum.GAME;
     }
+    if("OPTIONS" === id)
+    {
+      gameNamespace.gamestate = gameNamespace.GamestateEnum.OPTIONS;
+    }
+    if("TUTORIAL" === id)
+    {
+      gameNamespace.gamestate = gameNamespace.GamestateEnum.TUTORIAL;
+    }
+    if("HIGHSCORE" === id)
+    {
+      gameNamespace.gamestate = gameNamespace.GamestateEnum.HIGHSCORE;
+    }
+    if("EXIT" === id)
+    {
+      gameNamespace.gamestate = gameNamespace.GamestateEnum.EXIT;
+    }
     if(id !== "MAIN")
       gameNamespace.game.divFontColourSize(id,"impact","yellow","38");
-  //  gameNamespace.mouseX = touches[0].clientX;
-  //  gameNamespace.mouseY = touches[0].clientY;
 }
 /**
 * onTouchMove
@@ -237,8 +281,6 @@ onTouchEnd(id,e)
   //document.getElementById(id).style.visibility = "visible";
 
   if(id !== "MAIN")
-
     gameNamespace.game.divFontColourSize(id,"impact","white","38");
-//  gameNamespace.mouseX = touches[0].clientX;
 }
 }
