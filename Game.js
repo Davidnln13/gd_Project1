@@ -47,11 +47,12 @@ class Game
     this.createDiv("EXIT","EXIT",110,500,true);
     //play
     this.createDiv("<img src=./Resources/Images/optionsSymbol.png>","optionsSymbol",440,10,true);
+    this.createDiv("<img src=./Resources/Images/Player.png>","PLAYER",203,720,true);
     //options
     this.createDiv("MAIN MENU","optionsMain",165,500,true);
     //list to hold text divs on main menu
     gameNamespace.mainMenuTextDivs = ["MAIN","GAME","OPTIONS","TUTORIAL","HIGHSCORE","EXIT"];
-    gameNamespace.playGameDivs = ["optionsSymbol"];
+    gameNamespace.playGameDivs = ["optionsSymbol", "PLAYER"];
     gameNamespace.optionisDivs = ["optionsMain"];
     //initialise visibility
     gameNamespace.flipOnce = false;
