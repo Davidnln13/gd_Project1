@@ -26,15 +26,6 @@ class Game
                                     EXIT:5
                                   }
     gameNamespace.gamestate = gameNamespace.GamestateEnum.MAIN;
-
-    //different screens
-    gameNamespace.mainMenu = new MainMenu();
-    gameNamespace.gameMenu = new GameMenu();
-    gameNamespace.optionsMenu = new OptionsMenu();
-    gameNamespace.tutorialMenu = new TutorialMenu();
-    gameNamespace.highscoreMenu = new HighscoreMenu();
-    gameNamespace.exitMenu = new ExitMenu();
-
     //context
     gameNamespace.ctx;
     //initialise canvas
@@ -47,23 +38,34 @@ class Game
     //creates both background divs
     this.createDiv('<img src=./Resources/Images/background.png>',"backgroundOneDiv",0,0,false);
     this.createDiv('<img src=./Resources/Images/background.png>',"backgroundTwoDiv",0,0,false);
-    //Text Divs
+    //Text Divs Main
     this.createDiv('Space Runner',"MAIN",110,100,true);
     this.createDiv("PLAY","GAME",110,300,true);
     this.createDiv("OPTIONS","OPTIONS",110,350,true);
     this.createDiv("TUTORIAL","TUTORIAL",110,400,true);
     this.createDiv("HIGHSCORE","HIGHSCORE",110,450,true);
     this.createDiv("EXIT","EXIT",110,500,true);
+    //play
+    this.createDiv("<img src=./Resources/Images/optionsSymbol.png>","optionsSymbol",440,10,true);
+    //options
+    this.createDiv("MAIN MENU","optionsMain",165,500,true);
     //list to hold text divs on main menu
     gameNamespace.mainMenuTextDivs = ["MAIN","GAME","OPTIONS","TUTORIAL","HIGHSCORE","EXIT"];
-
-    //font and font size of Divs
+    gameNamespace.playGameDivs = ["optionsSymbol"];
+    gameNamespace.optionisDivs = ["optionsMain"];
+    //initialise visibility
+    gameNamespace.flipOnce = false;
+    gameNamespace.game.flipVisibility(gameNamespace.playGameDivs, false);
+    gameNamespace.game.flipVisibility(gameNamespace.optionisDivs, false);
+    //font and font size of Divs main
     gameNamespace.game.divFontColourSize("MAIN","impact","white","48");
     gameNamespace.game.divFontColourSize("GAME","impact","white","38");
     gameNamespace.game.divFontColourSize("OPTIONS","impact","white","38");
     gameNamespace.game.divFontColourSize("TUTORIAL","impact","white","38");
     gameNamespace.game.divFontColourSize("HIGHSCORE","impact","white","38");
     gameNamespace.game.divFontColourSize("EXIT","impact","white","38");
+    //options
+    gameNamespace.game.divFontColourSize("optionsMain","impact","white","38");
 
     gameNamespace.game.update();
     ///this.ctx.addEventListener("touchmove", this.onTouchMove.bind(this));
@@ -86,6 +88,7 @@ class Game
  */
  update()
  {
+
    //resets background
    if(gameNamespace.posOne > 880)
    {
@@ -103,38 +106,8 @@ class Game
    document.getElementById("backgroundTwoDiv").style.top = gameNamespace.posTwo + 'px';
    gameNamespace.game.draw();
    //update menus
-   if(gameNamespace.gamestate === gameNamespace.GamestateEnum.MAIN)
-   {
-       gameNamespace.mainMenu.update();
-   }
-   else
-   {
-     for(var i =0; i< gameNamespace.mainMenuTextDivs.length; i++)
-     {
-        //document.getElementById(gameNamespace.mainMenuTextDivs[i]).style.visibility = "hidden";
-     }
-   }
+   gameNamespace.game.UpdateMenus();
 
-   if(gameNamespace.gamestate === gameNamespace.GamestateEnum.GAME)
-   {
-      gameNamespace.gameMenu.update();
-   }
-   if(gameNamespace.gamestate === gameNamespace.GamestateEnum.OPTIONS)
-   {
-       gameNamespace.optionsMenu.update();
-   }
-   if(gameNamespace.gamestate === gameNamespace.GamestateEnum.TUTORIAL)
-   {
-       gameNamespace.tutorialMenu.update();
-   }
-   if(gameNamespace.gamestate === gameNamespace.GamestateEnum.HIGHSCORE)
-   {
-       gameNamespace.highscoreMenu.update();
-   }
-   if(gameNamespace.gamestate === gameNamespace.GamestateEnum.EXIT)
-   {
-       gameNamespace.exitMenu.update();
-   }
    //recursively calls update of game : this method
    window.requestAnimationFrame(gameNamespace.game.update);
  }
@@ -145,32 +118,16 @@ class Game
 
  draw()
  {
-
    gameNamespace.ctx.clearRect(0,0,window.innerWidth, window.innerHeight);
+   //main
+   if(gameNamespace.gamestate === 0)
+   {
 
-   if(gameNamespace.gamestate === gameNamespace.GamestateEnum.MAIN)
-   {
-     gameNamespace.mainMenu.draw();
    }
-   if(gameNamespace.gamestate === gameNamespace.GamestateEnum.GAME)
+   //play
+   if(gameNamespace.gamestate === 1)
    {
-     gameNamespace.gameMenu.draw();
-   }
-   if(gameNamespace.gamestate === gameNamespace.GamestateEnum.OPTIONS)
-   {
-     gameNamespace.optionsMenu.draw();
-   }
-   if(gameNamespace.gamestate === gameNamespace.GamestateEnum.TUTORIAL)
-   {
-       gameNamespace.tutorialMenu.draw();
-   }
-   if(gameNamespace.gamestate === gameNamespace.GamestateEnum.HIGHSCORE)
-   {
-     gameNamespace.highscoreMenu.draw();
-   }
-   if(gameNamespace.gamestate === gameNamespace.GamestateEnum.EXIT)
-   {
-     gameNamespace.exitMenu.draw();
+
    }
  }
  /**
@@ -188,11 +145,11 @@ initCanvas()
 
 }
 //flips the passed in divs visibilty
-flipVisibility(divsToFlip)
+flipVisibility(divsToFlip, flipBool)
 {
   for(var i = 0; i < divsToFlip.length; i++)
   {
-    if(document.getElementById(divsToFlip[i]).style.visibility = "visible")
+    if(document.getElementById(divsToFlip[i]).style.visibility = "visible" && flipBool === false)
     {
       document.getElementById(divsToFlip[i]).style.visibility = "hidden";
     }
@@ -236,10 +193,48 @@ PreventingDefaults(e)
 * ontouchstart
 * @desc prints the starting position also saves that position and the time of the touch
 */
+UpdateMenus()
+{
+  //main
+ if(gameNamespace.gamestate === 0)
+ {
+   if(gameNamespace.flipOnce === false)
+   {
+     gameNamespace.flipOnce = true;
+     gameNamespace.game.flipVisibility(gameNamespace.mainMenuTextDivs,true);
+     gameNamespace.game.flipVisibility(gameNamespace.playGameDivs,false);
+     gameNamespace.game.flipVisibility(gameNamespace.optionisDivs, false);
+   }
+ }
+ //play
+ if(gameNamespace.gamestate === 1)
+ {
+   if(gameNamespace.flipOnce === false)
+   {
+     gameNamespace.flipOnce = true;
+     gameNamespace.game.flipVisibility(gameNamespace.mainMenuTextDivs,false);
+     gameNamespace.game.flipVisibility(gameNamespace.playGameDivs,true);
+     gameNamespace.game.flipVisibility(gameNamespace.optionisDivs, false);
+   }
+ }
+ //options
+ if(gameNamespace.gamestate === 2)
+ {
+   if(gameNamespace.flipOnce === false)
+   {
+     gameNamespace.flipOnce = true;
+     gameNamespace.game.flipVisibility(gameNamespace.mainMenuTextDivs,false);
+     gameNamespace.game.flipVisibility(gameNamespace.playGameDivs,false);
+     gameNamespace.game.flipVisibility(gameNamespace.optionisDivs, true);
+   }
+ }
+}
 onTouchStart(id,e)
 {
     e.preventDefault();
+    gameNamespace.flipOnce = false;
     var touches = e.touches;
+    //mainMenu
     if("GAME" === id)
     {
       gameNamespace.gamestate = gameNamespace.GamestateEnum.GAME;
@@ -260,8 +255,15 @@ onTouchStart(id,e)
     {
       gameNamespace.gamestate = gameNamespace.GamestateEnum.EXIT;
     }
-    if(id !== "MAIN")
-      gameNamespace.game.divFontColourSize(id,"impact","yellow","38");
+    //playscreen
+    if("optionsSymbol" === id)
+    {
+      gameNamespace.gamestate = gameNamespace.GamestateEnum.OPTIONS;
+    }
+    if("optionsMain" === id)
+    {
+      gameNamespace.gamestate = gameNamespace.GamestateEnum.MAIN;
+    }
 }
 /**
 * onTouchMove
@@ -279,8 +281,5 @@ onTouchEnd(id,e)
 {
   var touches = e.touches;
   //document.getElementById(id).style.visibility = "visible";
-
-  if(id !== "MAIN")
-    gameNamespace.game.divFontColourSize(id,"impact","white","38");
 }
 }
