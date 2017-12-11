@@ -107,7 +107,10 @@ class Game
    gameNamespace.game.draw();
    //update menus
    gameNamespace.game.UpdateMenus();
+   if(gameNamespace.gamestate === 1)
+   {
 
+   }
    //recursively calls update of game : this method
    window.requestAnimationFrame(gameNamespace.game.update);
  }
@@ -119,12 +122,6 @@ class Game
  draw()
  {
    gameNamespace.ctx.clearRect(0,0,window.innerWidth, window.innerHeight);
-   //main
-   if(gameNamespace.gamestate === 0)
-   {
-
-   }
-   //play
    if(gameNamespace.gamestate === 1)
    {
 
