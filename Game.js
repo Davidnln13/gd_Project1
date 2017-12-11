@@ -1,7 +1,6 @@
 //reviewed
 class Game
 {
-
   constructor()
   {
 
@@ -25,6 +24,11 @@ class Game
                                     HIGHSCORE:4,
                                     EXIT:5
                                   }
+    gameNamespace.PlayerPosEnum = {
+                                  LEFT: 50,
+                                  MID : 203,
+                                  RIGHT : 350
+    }
     gameNamespace.gamestate = gameNamespace.GamestateEnum.MAIN;
     //context
     gameNamespace.ctx;
@@ -32,9 +36,15 @@ class Game
     this.initCanvas();
 
     console.log("Initialising Game World");
+    //canvas touch events used for swipe detection
+    gameNamespace.canvas.addEventListener("touchstart", gameNamespace.game.canvasStart);
+    gameNamespace.canvas.addEventListener("touchmove", gameNamespace.game.canvasMove);
+    gameNamespace.canvas.addEventListener("touchend", gameNamespace.game.canvasEnd);
 
-    gameNamespace.canvas.addEventListener("touchstart", gameNamespace.game.PreventingDefaults);
-
+    //asteroids
+    gameNamespace.asteroidOne = new Asteroid();
+    gameNamespace.asteroidTwo = new Asteroid();
+    gameNamespace.asteroidThree = new Asteroid();
     //creates both background divs
     this.createDiv('<img src=./Resources/Images/background.png>',"backgroundOneDiv",0,0,false);
     this.createDiv('<img src=./Resources/Images/background.png>',"backgroundTwoDiv",0,0,false);
@@ -45,14 +55,33 @@ class Game
     this.createDiv("TUTORIAL","TUTORIAL",110,400,true);
     this.createDiv("HIGHSCORE","HIGHSCORE",110,450,true);
     this.createDiv("EXIT","EXIT",110,500,true);
+    //swipe detection
+    gameNamespace.startingPosX = -100;
+    gameNamespace.startingPosY = -100;
+
+    gameNamespace.endingPosX = -100;
+    gameNamespace.endingPosY = -100;
+
+    gameNamespace.startingTime = 0;
+    gameNamespace.endingTime = 0;
+
+    gameNamespace.swipeLength = 0;
+    //player movement
+    gameNamespace.movingLeft = false;
+    gameNamespace.movingRight = false;
+    gameNamespace.moveSpeed = 10;
     //play
+    gameNamespace.currentPosition = gameNamespace.PlayerPosEnum.MID;
+    gameNamespace.score = 0;
+    gameNamespace.currentPositionPixels = 203;
     this.createDiv("<img src=./Resources/Images/optionsSymbol.png>","optionsSymbol",440,10,true);
-    this.createDiv("<img src=./Resources/Images/Player.png>","PLAYER",203,720,true);
+    this.createDiv("<img src=./Resources/Images/Player.png>","PLAYER",gameNamespace.PlayerPosEnum.MID,720,true);
+    this.createDiv("Score: 0", "PLAYSCORE",10,10,false);
     //options
     this.createDiv("MAIN MENU","optionsMain",165,500,true);
     //list to hold text divs on main menu
     gameNamespace.mainMenuTextDivs = ["MAIN","GAME","OPTIONS","TUTORIAL","HIGHSCORE","EXIT"];
-    gameNamespace.playGameDivs = ["optionsSymbol", "PLAYER"];
+    gameNamespace.playGameDivs = ["optionsSymbol", "PLAYER", "PLAYSCORE"];
     gameNamespace.optionisDivs = ["optionsMain"];
     //initialise visibility
     gameNamespace.flipOnce = false;
@@ -67,7 +96,8 @@ class Game
     gameNamespace.game.divFontColourSize("EXIT","impact","white","38");
     //options
     gameNamespace.game.divFontColourSize("optionsMain","impact","white","38");
-
+    //player
+    gameNamespace.game.divFontColourSize("PLAYSCORE","impact","white","38");
     gameNamespace.game.update();
     ///this.ctx.addEventListener("touchmove", this.onTouchMove.bind(this));
     ///this.ctx.addEventListener("touchend", onTouchEnd);
@@ -89,7 +119,8 @@ class Game
  */
  update()
  {
-
+   gameNamespace.score +=0.1;
+   document.getElementById("PLAYSCORE").innerHTML = "Score: " + parseInt(gameNamespace.score);
    //resets background
    if(gameNamespace.posOne > 880)
    {
@@ -108,9 +139,50 @@ class Game
    gameNamespace.game.draw();
    //update menus
    gameNamespace.game.UpdateMenus();
+   //if were in the play gamestate
    if(gameNamespace.gamestate === 1)
    {
-
+     //if were moving left
+     if(gameNamespace.movingLeft === true)
+     {
+          //if were already left
+         if(gameNamespace.currentPosition === gameNamespace.PlayerPosEnum.LEFT)
+         {
+           gameNamespace.movingLeft = false;
+         }
+         //if were mid
+         if(gameNamespace.currentPosition === gameNamespace.PlayerPosEnum.MID)
+         {
+           //move from mid to left
+           gameNamespace.game.MoveLeft(gameNamespace.PlayerPosEnum.MID,gameNamespace.PlayerPosEnum.LEFT);
+         }
+         if(gameNamespace.currentPosition === gameNamespace.PlayerPosEnum.RIGHT)
+         {
+           //move from right to mid
+           gameNamespace.game.MoveLeft(gameNamespace.PlayerPosEnum.RIGHT,gameNamespace.PlayerPosEnum.MID);
+         }
+     }
+     //if were moving right
+     if(gameNamespace.movingRight === true)
+     {
+          //if were left
+         if(gameNamespace.currentPosition === gameNamespace.PlayerPosEnum.LEFT)
+         {
+           //move from left to MID
+           gameNamespace.game.MoveRight(gameNamespace.PlayerPosEnum.LEFT,gameNamespace.PlayerPosEnum.MID);
+         }
+         //if were mid
+         if(gameNamespace.currentPosition === gameNamespace.PlayerPosEnum.MID)
+         {
+           //move from mid to Right
+           gameNamespace.game.MoveRight(gameNamespace.PlayerPosEnum.MID,gameNamespace.PlayerPosEnum.RIGHT);
+         }
+         //if were already right
+         if(gameNamespace.currentPosition === gameNamespace.PlayerPosEnum.RIGHT)
+         {
+           gameNamespace.movingRight = false;
+         }
+     }
    }
    //recursively calls update of game : this method
    window.requestAnimationFrame(gameNamespace.game.update);
@@ -123,15 +195,63 @@ class Game
  draw()
  {
    gameNamespace.ctx.clearRect(0,0,window.innerWidth, window.innerHeight);
-   if(gameNamespace.gamestate === 1)
-   {
-
-   }
  }
  /**
 * initCanvas
 * @desc initialises the canvas
 */
+MoveRight(currentSpot, desiredSpot)
+{
+  if(gameNamespace.movingRight === true)
+  {
+    //only called once per swipe
+    if(gameNamespace.moveSpeed === 10)
+    {
+     document.getElementById("PLAYER").innerHTML = "<img src=./Resources/Images/PlayerRight.png>";
+    }
+    //move left by x pixels
+     document.getElementById("PLAYER").style.left = currentSpot + gameNamespace.moveSpeed + 'px';
+     gameNamespace.moveSpeed += 10;
+     gameNamespace.currentPositionPixels+=10;
+     if(gameNamespace.currentPositionPixels > desiredSpot)
+     {
+       gameNamespace.currentPositionPixels = desiredSpot;
+     }
+     if(gameNamespace.currentPositionPixels === desiredSpot)
+     {
+       document.getElementById("PLAYER").innerHTML = "<img src=./Resources/Images/Player.png>";
+       gameNamespace.currentPosition = desiredSpot;
+       gameNamespace.moveSpeed = 10;
+       gameNamespace.movingRight = false;
+     }
+   }
+}
+MoveLeft(currentSpot,desiredSpot)
+{
+  if(gameNamespace.movingLeft === true)
+  {
+    //only called once per swipe
+    if(gameNamespace.moveSpeed === 10)
+    {
+     document.getElementById("PLAYER").innerHTML = "<img src=./Resources/Images/PlayerLeft.png>";
+    }
+    //move left by x pixels
+     document.getElementById("PLAYER").style.left = currentSpot - gameNamespace.moveSpeed + 'px';
+     gameNamespace.moveSpeed += 10;
+     gameNamespace.currentPositionPixels-=10;
+     if(gameNamespace.currentPositionPixels < desiredSpot)
+     {
+       gameNamespace.currentPositionPixels = desiredSpot;
+     }
+     if(gameNamespace.currentPositionPixels === desiredSpot)
+     {
+       document.getElementById("PLAYER").innerHTML = "<img src=./Resources/Images/Player.png>";
+       gameNamespace.currentPosition = desiredSpot;
+       gameNamespace.moveSpeed = 10;
+       gameNamespace.movingLeft = false;
+     }
+   }
+}
 initCanvas()
 {
   gameNamespace.canvas = document.createElement("canvas");
@@ -169,7 +289,6 @@ createDiv(divType,divID,divPosX,divPosY,clickable)
   if(clickable === true)
   {
     div.addEventListener("touchstart", gameNamespace.game.onTouchStart.bind(null,divID));
-    div.addEventListener("touchend", gameNamespace.game.onTouchEnd.bind(null,divID));
   }
   else {
      div.style.pointerEvents = "none";
@@ -183,9 +302,53 @@ divFontColourSize(name,font,colour,size)
   document.getElementById(name).style.font = size + "px " + font;
 }
 //currently just prevents the screen from moving
-PreventingDefaults(e)
+canvasStart(e)
 {
   e.preventDefault();
+  if(gameNamespace.gamestate === 1)
+  {
+    var touches = e.touches;
+    gameNamespace.startingPosX = touches[0].clientX;
+    gameNamespace.startingPosY = touches[0].clientY;
+    gameNamespace.startingTime = new Date();
+  }
+}
+canvasMove(e)
+{
+  if(gameNamespace.gamestate === 1)
+  {
+    e.preventDefault();
+    var touches = e.touches;
+    gameNamespace.endingPosX = touches[0].clientX;
+    gameNamespace.endingPosY = touches[0].clientY;
+  }
+}
+canvasEnd(e)
+{
+  e.preventDefault();
+  if(gameNamespace.gamestate === 1)
+  {
+    gameNamespace.endingTime = new Date();
+    gameNamespace.swipeLength = Math.sqrt((
+                                         (gameNamespace.endingPosX - gameNamespace.startingPosX)
+                                         *(gameNamespace.endingPosX - gameNamespace.startingPosX)
+                                         ) + ((gameNamespace.endingPosY - gameNamespace.startingPosY)
+                                         *(gameNamespace.endingPosY - gameNamespace.startingPosY)));
+    if(gameNamespace.swipeLength > 150)
+    {
+      if(gameNamespace.endingTime - gameNamespace.startingTime < 200)
+      {
+        if(gameNamespace.startingPosX < gameNamespace.endingPosX)
+        {
+           gameNamespace.movingRight = true;
+        }
+        if(gameNamespace.startingPosX > gameNamespace.endingPosX)
+        {
+          gameNamespace.movingLeft = true;
+        }
+      }
+    }
+  }
 }
 /**
 * ontouchstart
@@ -262,22 +425,5 @@ onTouchStart(id,e)
     {
       gameNamespace.gamestate = gameNamespace.GamestateEnum.MAIN;
     }
-}
-/**
-* onTouchMove
-* @desc clears the screen draws the line and saves the final position
-*/
-onTouchMove(e)
-{
-
-}
-/**
-* onTouchEnd
-* @desc outputs the time difference, the length of the line also then decides if the line was a swipe based on its size and time if it is a swipe it writes to the screen swipe detected
-*/
-onTouchEnd(id,e)
-{
-  var touches = e.touches;
-  //document.getElementById(id).style.visibility = "visible";
 }
 }
