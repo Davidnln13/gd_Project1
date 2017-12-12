@@ -101,11 +101,12 @@ class Game
     this.createDiv("Restart", "GAMERESTART",125,450,true);
     this.createDiv("Main Menu", "GAMEMAINMENU",125,500,true);
     //options
+    this.createDiv("RESUME","optionsResume",165,450,true);
     this.createDiv("MAIN MENU","optionsMain",165,500,true);
     //list to hold text divs on main menu
     gameNamespace.mainMenuTextDivs = ["MAIN","GAME","OPTIONS","TUTORIAL","HIGHSCORE","EXIT"];
     gameNamespace.playGameDivs = ["optionsSymbol", "PLAYER", "PLAYSCORE", "ASTEROIDONE", "ASTEROIDTWO", "ASTEROIDTHREE","EXPLOSION"];
-    gameNamespace.optionisDivs = ["optionsMain"];
+    gameNamespace.optionisDivs = ["optionsMain","optionsResume"];
     gameNamespace.gameOverDivs = ["GAMEOVER","GAMERESTART","GAMEMAINMENU"];
     //initialise visibility
     gameNamespace.flipOnce = false;
@@ -121,6 +122,7 @@ class Game
     gameNamespace.game.divFontColourSize("EXIT","impact","white","38");
     //options
     gameNamespace.game.divFontColourSize("optionsMain","impact","white","38");
+    gameNamespace.game.divFontColourSize("optionsResume","impact","white","38");
     //player
     gameNamespace.game.divFontColourSize("PLAYSCORE","impact","white","38");
     gameNamespace.game.divFontColourSize("GAMEOVER","impact","white","52");
@@ -571,6 +573,10 @@ onTouchStart(id,e)
     if("optionsMain" === id || "GAMEMAINMENU" === id)
     {
       gameNamespace.gamestate = gameNamespace.GamestateEnum.MAIN;
+    }
+    if("optionsResume" === id)
+    {
+      gameNamespace.gamestate = gameNamespace.GamestateEnum.GAME;
     }
     if("GAMERESTART" === id)
     {
