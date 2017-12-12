@@ -41,10 +41,6 @@ class Game
     gameNamespace.canvas.addEventListener("touchmove", gameNamespace.game.canvasMove);
     gameNamespace.canvas.addEventListener("touchend", gameNamespace.game.canvasEnd);
 
-    //asteroids
-    gameNamespace.asteroidOne = new Asteroid();
-    gameNamespace.asteroidTwo = new Asteroid();
-    gameNamespace.asteroidThree = new Asteroid();
     //creates both background divs
     this.createDiv('<img src=./Resources/Images/background.png>',"backgroundOneDiv",0,0,false);
     this.createDiv('<img src=./Resources/Images/background.png>',"backgroundTwoDiv",0,0,false);
@@ -74,14 +70,21 @@ class Game
     gameNamespace.currentPosition = gameNamespace.PlayerPosEnum.MID;
     gameNamespace.score = 0;
     gameNamespace.currentPositionPixels = 203;
+    gameNamespace.asteroidPosY = [-50,-350,-650];
+    gameNamespace.asteroidMoveSpeed = 2;
+    gameNamespace.asteroidRotation = [gameNamespace.game.RandomPos(),gameNamespace.game.RandomPos(),gameNamespace.game.RandomPos()];
+    this.createDiv("<img src=./Resources/Images/asteroid.png>", "ASTEROIDONE",gameNamespace.game.RandomPos(),-50,false);
+    this.createDiv("<img src=./Resources/Images/asteroid.png>", "ASTEROIDTWO",gameNamespace.game.RandomPos(),-250,false);
+    this.createDiv("<img src=./Resources/Images/asteroid.png>", "ASTEROIDTHREE",gameNamespace.game.RandomPos(),-450,false);
     this.createDiv("<img src=./Resources/Images/optionsSymbol.png>","optionsSymbol",440,10,true);
     this.createDiv("<img src=./Resources/Images/Player.png>","PLAYER",gameNamespace.PlayerPosEnum.MID,720,true);
     this.createDiv("Score: 0", "PLAYSCORE",10,10,false);
+    gameNamespace.asteroids = ["ASTEROIDONE", "ASTEROIDTWO", "ASTEROIDTHREE"];
     //options
     this.createDiv("MAIN MENU","optionsMain",165,500,true);
     //list to hold text divs on main menu
     gameNamespace.mainMenuTextDivs = ["MAIN","GAME","OPTIONS","TUTORIAL","HIGHSCORE","EXIT"];
-    gameNamespace.playGameDivs = ["optionsSymbol", "PLAYER", "PLAYSCORE"];
+    gameNamespace.playGameDivs = ["optionsSymbol", "PLAYER", "PLAYSCORE", "ASTEROIDONE", "ASTEROIDTWO", "ASTEROIDTHREE"];
     gameNamespace.optionisDivs = ["optionsMain"];
     //initialise visibility
     gameNamespace.flipOnce = false;
@@ -119,8 +122,6 @@ class Game
  */
  update()
  {
-   gameNamespace.score +=0.1;
-   document.getElementById("PLAYSCORE").innerHTML = "Score: " + parseInt(gameNamespace.score);
    //resets background
    if(gameNamespace.posOne > 880)
    {
@@ -142,6 +143,10 @@ class Game
    //if were in the play gamestate
    if(gameNamespace.gamestate === 1)
    {
+     gameNamespace.game.UpdateAsteroids();
+     gameNamespace.score +=0.1;
+     document.getElementById("PLAYSCORE").innerHTML = "Score: " + parseInt(gameNamespace.score);
+    // console.log(document.getElementById("PLAYER").width());
      //if were moving left
      if(gameNamespace.movingLeft === true)
      {
@@ -187,6 +192,53 @@ class Game
    //recursively calls update of game : this method
    window.requestAnimationFrame(gameNamespace.game.update);
  }
+ Reset()
+ {
+  gameNamespace.score = 0;
+  gameNamespace.currentPosition = gameNamespace.PlayerPosEnum.MID;
+  gameNamespace.currentPositionPixels = 203;
+  gameNamespace.game.SpawnAsteroid(gameNamespace.asteroids[0],0,true);
+  gameNamespace.game.SpawnAsteroid(gameNamespace.asteroids[1],1,true);
+  gameNamespace.game.SpawnAsteroid(gameNamespace.asteroids[2],2,true);
+ }
+ UpdateAsteroids()
+ {
+   for(var i = 0; i < gameNamespace.asteroids.length; i++)
+   {
+      gameNamespace.asteroidRotation[i] += 1;
+      gameNamespace.asteroidPosY[i] += gameNamespace.asteroidMoveSpeed;
+      document.getElementById(gameNamespace.asteroids[i]).style.transform = "rotate(" + gameNamespace.asteroidRotation[i] + "deg)";
+      document.getElementById(gameNamespace.asteroids[i]).style.top = gameNamespace.asteroidPosY[i] + "px";
+      if(gameNamespace.asteroidPosY[i] > 900)
+      {
+        gameNamespace.game.SpawnAsteroid(gameNamespace.asteroids[i],i,false);
+      }
+   }
+
+
+ }
+ CheckCollisions()
+ {
+   for(var i = 0; i < 3; i++)
+   {
+     //if(document.getElementById("PLAYER").style.x))
+   }
+ }
+ SpawnAsteroid(id, index, fromStart)
+ {
+   gameNamespace.asteroidRotation[index] = gameNamespace.game.RandomPos();
+   document.getElementById(id).style.visibility = "hidden";
+   if(fromStart === false)
+    gameNamespace.asteroidPosY[index] = -50;
+  else
+  {
+    gameNamespace.asteroidPosY[0] = -50;
+    gameNamespace.asteroidPosY[1] = -350;
+    gameNamespace.asteroidPosY[2] = -650;
+  }
+   document.getElementById(id).style.left = gameNamespace.game.RandomPos() + "px";
+   document.getElementById(id).style.visibility = "visible";
+ }
  /**
  * draw
  * @desc draws the sprites
@@ -200,6 +252,16 @@ class Game
 * initCanvas
 * @desc initialises the canvas
 */
+RandomPos()
+{
+  var pos = Math.floor(Math.random()*3)
+  if(pos === 0)
+    return 50;
+  if(pos === 1)
+    return 203;
+  if(pos === 2)
+    return 350;
+}
 MoveRight(currentSpot, desiredSpot)
 {
   if(gameNamespace.movingRight === true)
@@ -326,7 +388,7 @@ canvasMove(e)
 canvasEnd(e)
 {
   e.preventDefault();
-  if(gameNamespace.gamestate === 1)
+  if(gameNamespace.gamestate === 1 && gameNamespace.endingPosX !== -100)
   {
     gameNamespace.endingTime = new Date();
     gameNamespace.swipeLength = Math.sqrt((
@@ -361,6 +423,7 @@ UpdateMenus()
  {
    if(gameNamespace.flipOnce === false)
    {
+     gameNamespace.game.Reset();
      gameNamespace.flipOnce = true;
      gameNamespace.game.flipVisibility(gameNamespace.mainMenuTextDivs,true);
      gameNamespace.game.flipVisibility(gameNamespace.playGameDivs,false);
