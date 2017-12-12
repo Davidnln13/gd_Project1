@@ -34,7 +34,6 @@ class Game
     gameNamespace.ctx;
     //initialise canvas
     this.initCanvas();
-
     console.log("Initialising Game World");
     //canvas touch events used for swipe detection
     gameNamespace.canvas.addEventListener("touchstart", gameNamespace.game.canvasStart);
@@ -72,24 +71,47 @@ class Game
     gameNamespace.currentPositionPixels = 203;
     gameNamespace.asteroidPosY = [-50,-350,-650];
     gameNamespace.asteroidMoveSpeed = 2;
+    gameNamespace.explode = false;
+    gameNamespace.alive = false;
+    gameNamespace.startAnimation;
+    gameNamespace.stopAnimation;
     gameNamespace.asteroidRotation = [gameNamespace.game.RandomPos(),gameNamespace.game.RandomPos(),gameNamespace.game.RandomPos()];
     this.createDiv("<img src=./Resources/Images/asteroid.png>", "ASTEROIDONE",gameNamespace.game.RandomPos(),-50,false);
     this.createDiv("<img src=./Resources/Images/asteroid.png>", "ASTEROIDTWO",gameNamespace.game.RandomPos(),-250,false);
     this.createDiv("<img src=./Resources/Images/asteroid.png>", "ASTEROIDTHREE",gameNamespace.game.RandomPos(),-450,false);
     this.createDiv("<img src=./Resources/Images/optionsSymbol.png>","optionsSymbol",440,10,true);
+    gameNamespace.listOfExplosions = ["<img src=./Resources/Images/ExplosionOne.png>","<img src=./Resources/Images/ExplosionTwo.png>","<img src=./Resources/Images/ExplosionThree.png>","<img src=./Resources/Images/ExplosionFour.png>",
+                                      "<img src=./Resources/Images/ExplosionFive.png>","<img src=./Resources/Images/ExplosionSix.png>","<img src=./Resources/Images/ExplosionSeven.png>","<img src=./Resources/Images/ExplosionEight.png>",
+                                      "<img src=./Resources/Images/ExplosionNine.png>","<img src=./Resources/Images/ExplosionTen.png>"];
+    gameNamespace.explosionCurrentIndex = 0;
+    this.createDiv(gameNamespace.listOfExplosions[0],-250,-250,false);
     this.createDiv("<img src=./Resources/Images/Player.png>","PLAYER",gameNamespace.PlayerPosEnum.MID,720,true);
     this.createDiv("Score: 0", "PLAYSCORE",10,10,false);
+    this.createDiv(gameNamespace.listOfExplosions[0],"EXPLOSION",-250,-250,false);
     gameNamespace.asteroids = ["ASTEROIDONE", "ASTEROIDTWO", "ASTEROIDTHREE"];
+    for(var i = 0; i <3; i++)
+    {
+      document.getElementById(gameNamespace.asteroids[i]).style.width = 88 + "px";
+      document.getElementById(gameNamespace.asteroids[i]).style.height = 96 + "px";
+    }
+    document.getElementById("PLAYER").style.width = 88 + "px";
+    document.getElementById("PLAYER").style.height = 66 + "px";
+
+    this.createDiv("GAME OVER", "GAMEOVER", 125,250,false);
+    this.createDiv("Restart", "GAMERESTART",125,450,true);
+    this.createDiv("Main Menu", "GAMEMAINMENU",125,500,true);
     //options
     this.createDiv("MAIN MENU","optionsMain",165,500,true);
     //list to hold text divs on main menu
     gameNamespace.mainMenuTextDivs = ["MAIN","GAME","OPTIONS","TUTORIAL","HIGHSCORE","EXIT"];
-    gameNamespace.playGameDivs = ["optionsSymbol", "PLAYER", "PLAYSCORE", "ASTEROIDONE", "ASTEROIDTWO", "ASTEROIDTHREE"];
+    gameNamespace.playGameDivs = ["optionsSymbol", "PLAYER", "PLAYSCORE", "ASTEROIDONE", "ASTEROIDTWO", "ASTEROIDTHREE","EXPLOSION"];
     gameNamespace.optionisDivs = ["optionsMain"];
+    gameNamespace.gameOverDivs = ["GAMEOVER","GAMERESTART","GAMEMAINMENU"];
     //initialise visibility
     gameNamespace.flipOnce = false;
     gameNamespace.game.flipVisibility(gameNamespace.playGameDivs, false);
     gameNamespace.game.flipVisibility(gameNamespace.optionisDivs, false);
+    gameNamespace.game.flipVisibility(gameNamespace.gameOverDivs, false);
     //font and font size of Divs main
     gameNamespace.game.divFontColourSize("MAIN","impact","white","48");
     gameNamespace.game.divFontColourSize("GAME","impact","white","38");
@@ -101,6 +123,9 @@ class Game
     gameNamespace.game.divFontColourSize("optionsMain","impact","white","38");
     //player
     gameNamespace.game.divFontColourSize("PLAYSCORE","impact","white","38");
+    gameNamespace.game.divFontColourSize("GAMEOVER","impact","white","52");
+    gameNamespace.game.divFontColourSize("GAMERESTART","impact","white","38");
+    gameNamespace.game.divFontColourSize("GAMEMAINMENU","impact","white","38");
     gameNamespace.game.update();
     ///this.ctx.addEventListener("touchmove", this.onTouchMove.bind(this));
     ///this.ctx.addEventListener("touchend", onTouchEnd);
@@ -143,8 +168,43 @@ class Game
    //if were in the play gamestate
    if(gameNamespace.gamestate === 1)
    {
+     if(gameNamespace.alive === false)
+     {
+       gameNamespace.game.flipVisibility(gameNamespace.gameOverDivs);
+     }
+     if(gameNamespace.explode === true)
+     {
+       if(document.getElementById("EXPLOSION").style.left === -250 + 'px')
+       {
+         gameNamespace.startAnimation = new Date();
+       }
+       gameNamespace.stopAnimation = new Date();
+       var temp = gameNamespace.currentPosition + 'px';
+       document.getElementById("EXPLOSION").style.left = temp;
+       document.getElementById("EXPLOSION").style.top = 720 + 'px';
+       if(gameNamespace.stopAnimation - gameNamespace.startAnimation > 40)
+       {
+         gameNamespace.startAnimation = new Date();
+         gameNamespace.explosionCurrentIndex++;
+       }
+       document.getElementById("EXPLOSION").innerHTML = gameNamespace.listOfExplosions[gameNamespace.explosionCurrentIndex];
+       if(gameNamespace.explosionCurrentIndex >= 10)
+       {
+         document.getElementById("EXPLOSION").style.left = -250 + 'px';
+         document.getElementById("EXPLOSION").style.top = -250 + 'px';
+         gameNamespace.explosionCurrentIndex = 0;
+         gameNamespace.explode = false;
+       }
+
+     }
+     gameNamespace.game.CheckCollisions();
+     if(gameNamespace.score > 30 && gameNamespace.asteroidMoveSpeed < 3)
+     {
+       gameNamespace.asteroidMoveSpeed+=0.1;
+     }
      gameNamespace.game.UpdateAsteroids();
-     gameNamespace.score +=0.1;
+     if(gameNamespace.alive === true)
+        gameNamespace.score +=0.1;
      document.getElementById("PLAYSCORE").innerHTML = "Score: " + parseInt(gameNamespace.score);
     // console.log(document.getElementById("PLAYER").width());
      //if were moving left
@@ -187,14 +247,18 @@ class Game
          {
            gameNamespace.movingRight = false;
          }
-     }
    }
+ }
    //recursively calls update of game : this method
    window.requestAnimationFrame(gameNamespace.game.update);
  }
  Reset()
  {
+  gameNamespace.alive = false;
+  gameNamespace.explode = false;
   gameNamespace.score = 0;
+  gameNamespace.asteroidMoveSpeed = 2;
+  document.getElementById("PLAYER").style.left = 203 + 'px';
   gameNamespace.currentPosition = gameNamespace.PlayerPosEnum.MID;
   gameNamespace.currentPositionPixels = 203;
   gameNamespace.game.SpawnAsteroid(gameNamespace.asteroids[0],0,true);
@@ -221,9 +285,22 @@ class Game
  {
    for(var i = 0; i < 3; i++)
    {
-     //if(document.getElementById("PLAYER").style.x))
+     var temp = gameNamespace.currentPosition + 'px';
+     if(temp === document.getElementById(gameNamespace.asteroids[i]).style.left)
+     {
+       if(gameNamespace.asteroidPosY[i] >= 650 && gameNamespace.asteroidPosY[i] < 761)
+       {
+          if(gameNamespace.alive === true)
+          {
+            gameNamespace.alive = false;
+           document.getElementById("PLAYER").style.visibility = "hidden";
+           gameNamespace.explode = true;
+          }
+       }
+     }
    }
  }
+
  SpawnAsteroid(id, index, fromStart)
  {
    gameNamespace.asteroidRotation[index] = gameNamespace.game.RandomPos();
@@ -282,6 +359,7 @@ MoveRight(currentSpot, desiredSpot)
      if(gameNamespace.currentPositionPixels === desiredSpot)
      {
        document.getElementById("PLAYER").innerHTML = "<img src=./Resources/Images/Player.png>";
+       document.getElementById("PLAYER").style.left = desiredSpot;
        gameNamespace.currentPosition = desiredSpot;
        gameNamespace.moveSpeed = 10;
        gameNamespace.movingRight = false;
@@ -309,10 +387,12 @@ MoveLeft(currentSpot,desiredSpot)
      {
        document.getElementById("PLAYER").innerHTML = "<img src=./Resources/Images/Player.png>";
        gameNamespace.currentPosition = desiredSpot;
+        document.getElementById("PLAYER").style.left = desiredSpot;
        gameNamespace.moveSpeed = 10;
        gameNamespace.movingLeft = false;
      }
    }
+
 }
 initCanvas()
 {
@@ -428,6 +508,7 @@ UpdateMenus()
      gameNamespace.game.flipVisibility(gameNamespace.mainMenuTextDivs,true);
      gameNamespace.game.flipVisibility(gameNamespace.playGameDivs,false);
      gameNamespace.game.flipVisibility(gameNamespace.optionisDivs, false);
+     gameNamespace.game.flipVisibility(gameNamespace.gameOverDivs,false);
    }
  }
  //play
@@ -435,10 +516,12 @@ UpdateMenus()
  {
    if(gameNamespace.flipOnce === false)
    {
+     gameNamespace.alive = true;
      gameNamespace.flipOnce = true;
      gameNamespace.game.flipVisibility(gameNamespace.mainMenuTextDivs,false);
      gameNamespace.game.flipVisibility(gameNamespace.playGameDivs,true);
      gameNamespace.game.flipVisibility(gameNamespace.optionisDivs, false);
+     gameNamespace.game.flipVisibility(gameNamespace.gameOverDivs,false);
    }
  }
  //options
@@ -450,6 +533,7 @@ UpdateMenus()
      gameNamespace.game.flipVisibility(gameNamespace.mainMenuTextDivs,false);
      gameNamespace.game.flipVisibility(gameNamespace.playGameDivs,false);
      gameNamespace.game.flipVisibility(gameNamespace.optionisDivs, true);
+     gameNamespace.game.flipVisibility(gameNamespace.gameOverDivs,false);
    }
  }
 }
@@ -484,9 +568,13 @@ onTouchStart(id,e)
     {
       gameNamespace.gamestate = gameNamespace.GamestateEnum.OPTIONS;
     }
-    if("optionsMain" === id)
+    if("optionsMain" === id || "GAMEMAINMENU" === id)
     {
       gameNamespace.gamestate = gameNamespace.GamestateEnum.MAIN;
+    }
+    if("GAMERESTART" === id)
+    {
+      gameNamespace.game.Reset();
     }
 }
 }
