@@ -4,7 +4,9 @@ class Game
   constructor()
   {
 
-    gameNamespace.canvas = null;
+    this.canvas = null;
+    this.dataLoaded = false;
+    this.myAssets = new AssetLoader();
   }
     /**
   * initWorld
@@ -12,7 +14,17 @@ class Game
   */
   initWorld()
   {
-    //starting positions of individual divs
+    //Music
+    gameNamespace.BackgroundMusic = new Audio(gameNamespace.game.myAssets.data["Audio"]["BACKGROUNDMUSIC"]);
+    //loop
+    gameNamespace.BackgroundMusic.addEventListener('ended', function() {
+    this.currentTime = 0;
+    this.play();
+    }, false);
+    gameNamespace.BackgroundMusic.play();
+    //sounds
+    gameNamespace.ExplosionSound = new Audio(gameNamespace.game.myAssets.data["Audio"]["EXPLOSIONSOUND"]);
+    gameNamespace.MoveSound = new Audio(gameNamespace.game.myAssets.data["Audio"]["MOVESOUND"]);
     gameNamespace.posOne = 0;
     gameNamespace.posTwo = -880;
     //enum
@@ -22,7 +34,8 @@ class Game
                                     OPTIONS:2,
                                     TUTORIAL:3,
                                     HIGHSCORE:4,
-                                    EXIT:5
+                                    EXIT:5,
+                                    DIFFICULTY:6
                                   }
     gameNamespace.PlayerPosEnum = {
                                   LEFT: 50,
@@ -41,8 +54,8 @@ class Game
     gameNamespace.canvas.addEventListener("touchend", gameNamespace.game.canvasEnd);
 
     //creates both background divs
-    this.createDiv('<img src=./Resources/Images/background.png>',"backgroundOneDiv",0,0,false);
-    this.createDiv('<img src=./Resources/Images/background.png>',"backgroundTwoDiv",0,0,false);
+    this.createDiv("<img src=" + gameNamespace.game.myAssets.data["Images"]["BACKGROUNDIMG"] + ">","backgroundOneDiv",0,0,false);
+    this.createDiv("<img src=" + gameNamespace.game.myAssets.data["Images"]["BACKGROUNDIMG"] + ">","backgroundTwoDiv",0,0,false);
     //Text Divs Main
     this.createDiv('Space Runner',"MAIN",110,100,true);
     this.createDiv("PLAY","GAME",110,300,true);
@@ -70,22 +83,24 @@ class Game
     gameNamespace.score = 0;
     gameNamespace.currentPositionPixels = 203;
     gameNamespace.asteroidPosY = [-50,-350,-650];
-    gameNamespace.asteroidMoveSpeed = 2;
+    gameNamespace.asteroidMoveSpeed = 1;
+    gameNamespace.currentAsteroidMoveSpeed = 1;
     gameNamespace.explode = false;
     gameNamespace.alive = false;
     gameNamespace.startAnimation;
     gameNamespace.stopAnimation;
     gameNamespace.asteroidRotation = [gameNamespace.game.RandomPos(),gameNamespace.game.RandomPos(),gameNamespace.game.RandomPos()];
-    this.createDiv("<img src=./Resources/Images/asteroid.png>", "ASTEROIDONE",gameNamespace.game.RandomPos(),-50,false);
-    this.createDiv("<img src=./Resources/Images/asteroid.png>", "ASTEROIDTWO",gameNamespace.game.RandomPos(),-250,false);
-    this.createDiv("<img src=./Resources/Images/asteroid.png>", "ASTEROIDTHREE",gameNamespace.game.RandomPos(),-450,false);
-    this.createDiv("<img src=./Resources/Images/optionsSymbol.png>","optionsSymbol",440,10,true);
-    gameNamespace.listOfExplosions = ["<img src=./Resources/Images/ExplosionOne.png>","<img src=./Resources/Images/ExplosionTwo.png>","<img src=./Resources/Images/ExplosionThree.png>","<img src=./Resources/Images/ExplosionFour.png>",
-                                      "<img src=./Resources/Images/ExplosionFive.png>","<img src=./Resources/Images/ExplosionSix.png>","<img src=./Resources/Images/ExplosionSeven.png>","<img src=./Resources/Images/ExplosionEight.png>",
-                                      "<img src=./Resources/Images/ExplosionNine.png>","<img src=./Resources/Images/ExplosionTen.png>"];
+    this.createDiv("<img src=" + gameNamespace.game.myAssets.data["Images"]["ASTEROIDIMG"] + ">", "ASTEROIDONE",gameNamespace.game.RandomPos(),-50,false);
+    this.createDiv("<img src=" + gameNamespace.game.myAssets.data["Images"]["ASTEROIDIMG"] + ">", "ASTEROIDTWO",gameNamespace.game.RandomPos(),-250,false);
+    this.createDiv("<img src=" + gameNamespace.game.myAssets.data["Images"]["ASTEROIDIMG"] + ">", "ASTEROIDTHREE",gameNamespace.game.RandomPos(),-450,false);
+    this.createDiv("<img src=" + gameNamespace.game.myAssets.data["Images"]["OPTIONSSYMBOLIMG"] + ">","optionsSymbol",440,10,true);
+    gameNamespace.listOfExplosions = ["<img src=" + gameNamespace.game.myAssets.data["Images"]["EXPLOSIONIMGONE"] + ">","<img src=" + gameNamespace.game.myAssets.data["Images"]["EXPLOSIONIMGTWO"] + ">",
+                                      "<img src=" + gameNamespace.game.myAssets.data["Images"]["EXPLOSIONIMGTHREE"] + ">","<img src=" + gameNamespace.game.myAssets.data["Images"]["EXPLOSIONIMGFOUR"] + ">",
+                                      "<img src=" + gameNamespace.game.myAssets.data["Images"]["EXPLOSIONIMGFIVE"] + ">","<img src=" + gameNamespace.game.myAssets.data["Images"]["EXPLOSIONIMGSIX"] + ">",
+                                      "<img src=" + gameNamespace.game.myAssets.data["Images"]["EXPLOSIONIMGSEVEN"] + ">","<img src=" + gameNamespace.game.myAssets.data["Images"]["EXPLOSIONIMGEIGHT"] + ">",
+                                      "<img src=" + gameNamespace.game.myAssets.data["Images"]["EXPLOSIONIMGNINE"] + ">","<img src=" + gameNamespace.game.myAssets.data["Images"]["EXPLOSIONIMGTEN"] + ">"];
     gameNamespace.explosionCurrentIndex = 0;
-    this.createDiv(gameNamespace.listOfExplosions[0],-250,-250,false);
-    this.createDiv("<img src=./Resources/Images/Player.png>","PLAYER",gameNamespace.PlayerPosEnum.MID,720,true);
+    this.createDiv("<img src=" + gameNamespace.game.myAssets.data["Images"]["PLAYERIMG"] + ">","PLAYER",gameNamespace.PlayerPosEnum.MID,720,true);
     this.createDiv("Score: 0", "PLAYSCORE",10,10,false);
     this.createDiv(gameNamespace.listOfExplosions[0],"EXPLOSION",-250,-250,false);
     gameNamespace.asteroids = ["ASTEROIDONE", "ASTEROIDTWO", "ASTEROIDTHREE"];
@@ -101,18 +116,37 @@ class Game
     this.createDiv("Restart", "GAMERESTART",125,450,true);
     this.createDiv("Main Menu", "GAMEMAINMENU",125,500,true);
     //options
-    this.createDiv("RESUME","optionsResume",165,450,true);
-    this.createDiv("MAIN MENU","optionsMain",165,500,true);
+    this.createDiv("PLAY","optionsResume",165,450,true);
+    this.createDiv("MAIN MENU","optionsMain",165,550,true);
+    this.createDiv("SOUND","optionsSound",105,250,true);
+    this.createDiv("MUSIC","optionsMusic",305,250,true);
+    //difficulty screen
+    this.createDiv("EASY","difficultyEasy",165,200,true);
+    this.createDiv("MEDIUM","difficultyMedium",165,300,true);
+    this.createDiv("HARD","difficultyHard",165,400,true);
+    //HIGHSCORE
+    gameNamespace.currentHighest = "";
+    gameNamespace.currentHighestDifficulty = "";
+    this.createDiv("Current Best","highscoreCurrent",165,100,false);
+    this.createDiv(gameNamespace.currentHighest,"highscoreOutputN",165,250,false);
+    this.createDiv(gameNamespace.currentHighestDifficulty,"highscoreOutputD",165,300,false);
+    this.createDiv("MAIN MENU", "highscoreMainMenu", 165,400,true);
+    //tutorial
+    //this.createDiv("Swipe left to move Left", "tutorialMessage",105,200,false);
     //list to hold text divs on main menu
+    gameNamespace.difficultyScreenDivs = ["difficultyEasy","difficultyMedium","difficultyHard"];
     gameNamespace.mainMenuTextDivs = ["MAIN","GAME","OPTIONS","TUTORIAL","HIGHSCORE","EXIT"];
     gameNamespace.playGameDivs = ["optionsSymbol", "PLAYER", "PLAYSCORE", "ASTEROIDONE", "ASTEROIDTWO", "ASTEROIDTHREE","EXPLOSION"];
-    gameNamespace.optionisDivs = ["optionsMain","optionsResume"];
+    gameNamespace.optionisDivs = ["optionsMain","optionsResume","optionsSound","optionsMusic"];
     gameNamespace.gameOverDivs = ["GAMEOVER","GAMERESTART","GAMEMAINMENU"];
+    gameNamespace.highscoreDivs = ["highscoreCurrent","highscoreOutputN","highscoreOutputD","highscoreMainMenu"];
     //initialise visibility
     gameNamespace.flipOnce = false;
     gameNamespace.game.flipVisibility(gameNamespace.playGameDivs, false);
     gameNamespace.game.flipVisibility(gameNamespace.optionisDivs, false);
     gameNamespace.game.flipVisibility(gameNamespace.gameOverDivs, false);
+    gameNamespace.game.flipVisibility(gameNamespace.difficultyScreenDivs, false);
+    gameNamespace.game.flipVisibility(gameNamespace.highscoreDivs,false);
     //font and font size of Divs main
     gameNamespace.game.divFontColourSize("MAIN","impact","white","48");
     gameNamespace.game.divFontColourSize("GAME","impact","white","38");
@@ -123,12 +157,23 @@ class Game
     //options
     gameNamespace.game.divFontColourSize("optionsMain","impact","white","38");
     gameNamespace.game.divFontColourSize("optionsResume","impact","white","38");
+    gameNamespace.game.divFontColourSize("optionsSound","impact","green","38");
+    gameNamespace.game.divFontColourSize("optionsMusic","impact","green","38");
     //player
     gameNamespace.game.divFontColourSize("PLAYSCORE","impact","white","38");
     gameNamespace.game.divFontColourSize("GAMEOVER","impact","white","52");
     gameNamespace.game.divFontColourSize("GAMERESTART","impact","white","38");
     gameNamespace.game.divFontColourSize("GAMEMAINMENU","impact","white","38");
     gameNamespace.game.update();
+    //difficulty
+    gameNamespace.game.divFontColourSize("difficultyEasy","impact","green","38");
+    gameNamespace.game.divFontColourSize("difficultyMedium","impact","white","38");
+    gameNamespace.game.divFontColourSize("difficultyHard","impact","white","38");
+    //highscore
+    gameNamespace.game.divFontColourSize("highscoreCurrent","impact","white","38");
+    gameNamespace.game.divFontColourSize("highscoreOutputN","impact","white","38");
+    gameNamespace.game.divFontColourSize("highscoreOutputD","impact","white","38");
+    gameNamespace.game.divFontColourSize("highscoreMainMenu","impact","white","38");
     ///this.ctx.addEventListener("touchmove", this.onTouchMove.bind(this));
     ///this.ctx.addEventListener("touchend", onTouchEnd);
   //  gameNamespace.canvas.addEventListener("touchstart", this.onTouchStart.bind(this));
@@ -142,7 +187,10 @@ class Game
           }
       }, false);
   }
-
+SoundLoaded()
+{
+  gameNamespace.soundManager.playSound(gameNamespace.BackgroundMusic["BackgroundMusic"],true,1);
+}
  /**
  * update
  * @desc calls draw and itself recursively also updates animations
@@ -170,14 +218,65 @@ class Game
    //if were in the play gamestate
    if(gameNamespace.gamestate === 1)
    {
+     //scalable difficulty
+     if(gameNamespace.score > 50)
+     {
+       if(gameNamespace.asteroidMoveSpeed < gameNamespace.currentAsteroidMoveSpeed + 1)
+       {
+         gameNamespace.asteroidMoveSpeed += 0.1;
+       }
+     }
+     if(gameNamespace.score > 100)
+     {
+       if(gameNamespace.asteroidMoveSpeed < gameNamespace.currentAsteroidMoveSpeed + 2)
+       {
+         gameNamespace.asteroidMoveSpeed += 0.1;
+       }
+     }
+     if(gameNamespace.score > 150)
+     {
+       if(gameNamespace.asteroidMoveSpeed < gameNamespace.currentAsteroidMoveSpeed + 3)
+       {
+         gameNamespace.asteroidMoveSpeed += 0.1;
+       }
+     }
+     if(gameNamespace.score <= 50)
+     {
+       gameNamespace.asteroidMoveSpeed = gameNamespace.currentAsteroidMoveSpeed;
+     }
+
      if(gameNamespace.alive === false)
      {
        gameNamespace.game.flipVisibility(gameNamespace.gameOverDivs);
      }
      if(gameNamespace.explode === true)
      {
+       if(parseInt(gameNamespace.score) > gameNamespace.currentHighest)
+       {
+         gameNamespace.currentHighest = parseInt(gameNamespace.score);
+         document.getElementById("highscoreOutputN").innerHTML = "Score: " + parseInt(gameNamespace.score);
+         if(document.getElementById("difficultyEasy").style.color === "green")
+         {
+           document.getElementById("highscoreOutputD").innerHTML = "Difficulty: EASY";
+           gameNamespace.currentHighestDifficulty = "EASY";
+         }
+         if(document.getElementById("difficultyMedium").style.color === "green")
+         {
+            document.getElementById("highscoreOutputD").innerHTML ="Difficulty: Medium";
+            gameNamespace.currentHighestDifficulty = "MEDIUM";
+         }
+         if(document.getElementById("difficultyHard").style.color === "green")
+         {
+           document.getElementById("highscoreOutputD").innerHTML ="Difficulty: HARD";
+           gameNamespace.currentHighestDifficulty = "HARD";
+         }
+       }
        if(document.getElementById("EXPLOSION").style.left === -250 + 'px')
        {
+         if(document.getElementById("optionsSound").style.color === "green")
+         {
+            gameNamespace.ExplosionSound.play();
+         }
          gameNamespace.startAnimation = new Date();
        }
        gameNamespace.stopAnimation = new Date();
@@ -200,10 +299,6 @@ class Game
 
      }
      gameNamespace.game.CheckCollisions();
-     if(gameNamespace.score > 30 && gameNamespace.asteroidMoveSpeed < 3)
-     {
-       gameNamespace.asteroidMoveSpeed+=0.1;
-     }
      gameNamespace.game.UpdateAsteroids();
      if(gameNamespace.alive === true)
         gameNamespace.score +=0.1;
@@ -256,10 +351,11 @@ class Game
  }
  Reset()
  {
+  document.getElementById("optionsResume").innerHTML = "Play";
   gameNamespace.alive = false;
   gameNamespace.explode = false;
   gameNamespace.score = 0;
-  gameNamespace.asteroidMoveSpeed = 2;
+  gameNamespace.asteroidMoveSpeed = 1;
   document.getElementById("PLAYER").style.left = 203 + 'px';
   gameNamespace.currentPosition = gameNamespace.PlayerPosEnum.MID;
   gameNamespace.currentPositionPixels = 203;
@@ -348,7 +444,12 @@ MoveRight(currentSpot, desiredSpot)
     //only called once per swipe
     if(gameNamespace.moveSpeed === 10)
     {
-     document.getElementById("PLAYER").innerHTML = "<img src=./Resources/Images/PlayerRight.png>";
+      if(document.getElementById("optionsSound").style.color === "green")
+      {
+        gameNamespace.MoveSound.pause();
+        gameNamespace.MoveSound.play();
+      }
+     document.getElementById("PLAYER").innerHTML = "<img src=" + gameNamespace.game.myAssets.data["Images"]["PLAYERRIGHTIMG"] + ">";
     }
     //move left by x pixels
      document.getElementById("PLAYER").style.left = currentSpot + gameNamespace.moveSpeed + 'px';
@@ -360,7 +461,7 @@ MoveRight(currentSpot, desiredSpot)
      }
      if(gameNamespace.currentPositionPixels === desiredSpot)
      {
-       document.getElementById("PLAYER").innerHTML = "<img src=./Resources/Images/Player.png>";
+       document.getElementById("PLAYER").innerHTML = "<img src=" + gameNamespace.game.myAssets.data["Images"]["PLAYERIMG"] + ">";
        document.getElementById("PLAYER").style.left = desiredSpot;
        gameNamespace.currentPosition = desiredSpot;
        gameNamespace.moveSpeed = 10;
@@ -375,7 +476,12 @@ MoveLeft(currentSpot,desiredSpot)
     //only called once per swipe
     if(gameNamespace.moveSpeed === 10)
     {
-     document.getElementById("PLAYER").innerHTML = "<img src=./Resources/Images/PlayerLeft.png>";
+      if(document.getElementById("optionsSound").style.color === "green")
+      {
+        gameNamespace.MoveSound.pause();
+        gameNamespace.MoveSound.play();
+      }
+     document.getElementById("PLAYER").innerHTML = "<img src=" + gameNamespace.game.myAssets.data["Images"]["PLAYERLEFTIMG"] + ">";
     }
     //move left by x pixels
      document.getElementById("PLAYER").style.left = currentSpot - gameNamespace.moveSpeed + 'px';
@@ -387,7 +493,7 @@ MoveLeft(currentSpot,desiredSpot)
      }
      if(gameNamespace.currentPositionPixels === desiredSpot)
      {
-       document.getElementById("PLAYER").innerHTML = "<img src=./Resources/Images/Player.png>";
+       document.getElementById("PLAYER").innerHTML = "<img src=" + gameNamespace.game.myAssets.data["Images"]["PLAYERIMG"] + ">";
        gameNamespace.currentPosition = desiredSpot;
         document.getElementById("PLAYER").style.left = desiredSpot;
        gameNamespace.moveSpeed = 10;
@@ -478,17 +584,23 @@ canvasEnd(e)
                                          *(gameNamespace.endingPosX - gameNamespace.startingPosX)
                                          ) + ((gameNamespace.endingPosY - gameNamespace.startingPosY)
                                          *(gameNamespace.endingPosY - gameNamespace.startingPosY)));
-    if(gameNamespace.swipeLength > 150)
+    if(gameNamespace.swipeLength > 120)
     {
-      if(gameNamespace.endingTime - gameNamespace.startingTime < 200)
+      if(gameNamespace.endingTime - gameNamespace.startingTime < 150)
       {
         if(gameNamespace.startingPosX < gameNamespace.endingPosX)
         {
+          if(document.getElementById("PLAYER").style.visibility === "visible")
+          {
            gameNamespace.movingRight = true;
+          }
         }
         if(gameNamespace.startingPosX > gameNamespace.endingPosX)
         {
-          gameNamespace.movingLeft = true;
+          if(document.getElementById("PLAYER").style.visibility === "visible")
+          {
+           gameNamespace.movingLeft = true;
+          }
         }
       }
     }
@@ -511,6 +623,8 @@ UpdateMenus()
      gameNamespace.game.flipVisibility(gameNamespace.playGameDivs,false);
      gameNamespace.game.flipVisibility(gameNamespace.optionisDivs, false);
      gameNamespace.game.flipVisibility(gameNamespace.gameOverDivs,false);
+     gameNamespace.game.flipVisibility(gameNamespace.difficultyScreenDivs,false);
+     gameNamespace.game.flipVisibility(gameNamespace.highscoreDivs,false);
    }
  }
  //play
@@ -520,10 +634,13 @@ UpdateMenus()
    {
      gameNamespace.alive = true;
      gameNamespace.flipOnce = true;
+     document.getElementById("optionsResume").innerHTML = "Resume";
      gameNamespace.game.flipVisibility(gameNamespace.mainMenuTextDivs,false);
      gameNamespace.game.flipVisibility(gameNamespace.playGameDivs,true);
      gameNamespace.game.flipVisibility(gameNamespace.optionisDivs, false);
      gameNamespace.game.flipVisibility(gameNamespace.gameOverDivs,false);
+     gameNamespace.game.flipVisibility(gameNamespace.difficultyScreenDivs,false);
+     gameNamespace.game.flipVisibility(gameNamespace.highscoreDivs,false);
    }
  }
  //options
@@ -536,6 +653,36 @@ UpdateMenus()
      gameNamespace.game.flipVisibility(gameNamespace.playGameDivs,false);
      gameNamespace.game.flipVisibility(gameNamespace.optionisDivs, true);
      gameNamespace.game.flipVisibility(gameNamespace.gameOverDivs,false);
+     gameNamespace.game.flipVisibility(gameNamespace.difficultyScreenDivs,false);
+     gameNamespace.game.flipVisibility(gameNamespace.highscoreDivs,false);
+   }
+ }
+ //highscore
+ if(gameNamespace.gamestate === 4)
+ {
+   if(gameNamespace.flipOnce === false)
+   {
+     gameNamespace.flipOnce = true;
+     gameNamespace.game.flipVisibility(gameNamespace.mainMenuTextDivs,false);
+     gameNamespace.game.flipVisibility(gameNamespace.playGameDivs,false);
+     gameNamespace.game.flipVisibility(gameNamespace.optionisDivs, false);
+     gameNamespace.game.flipVisibility(gameNamespace.gameOverDivs,false);
+     gameNamespace.game.flipVisibility(gameNamespace.difficultyScreenDivs,false);
+     gameNamespace.game.flipVisibility(gameNamespace.highscoreDivs,true);
+   }
+ }
+ //difficulty
+ if(gameNamespace.gamestate === 6)
+ {
+   if(gameNamespace.flipOnce === false)
+   {
+     gameNamespace.flipOnce = true;
+     gameNamespace.game.flipVisibility(gameNamespace.mainMenuTextDivs,false);
+     gameNamespace.game.flipVisibility(gameNamespace.playGameDivs,false);
+     gameNamespace.game.flipVisibility(gameNamespace.optionisDivs, false);
+     gameNamespace.game.flipVisibility(gameNamespace.gameOverDivs,false);
+     gameNamespace.game.flipVisibility(gameNamespace.difficultyScreenDivs,true);
+     gameNamespace.game.flipVisibility(gameNamespace.highscoreDivs,false);
    }
  }
 }
@@ -547,7 +694,7 @@ onTouchStart(id,e)
     //mainMenu
     if("GAME" === id)
     {
-      gameNamespace.gamestate = gameNamespace.GamestateEnum.GAME;
+      gameNamespace.gamestate = gameNamespace.GamestateEnum.DIFFICULTY;
     }
     if("OPTIONS" === id)
     {
@@ -559,7 +706,23 @@ onTouchStart(id,e)
     }
     if("HIGHSCORE" === id)
     {
+      if(gameNamespace.currentHighestDifficulty === "EASY")
+      {
+        document.getElementById("highscoreOutputD").style.color = "green";
+      }
+      if(gameNamespace.currentHighestDifficulty === "MEDIUM")
+      {
+        document.getElementById("highscoreOutputD").style.color = "yellow";
+      }
+      if(gameNamespace.currentHighestDifficulty === "HARD")
+      {
+        document.getElementById("highscoreOutputD").style.color = "red";
+      }
       gameNamespace.gamestate = gameNamespace.GamestateEnum.HIGHSCORE;
+    }
+    if("highscoreMainMenu" === id)
+    {
+      gameNamespace.gamestate = gameNamespace.GamestateEnum.MAIN;
     }
     if("EXIT" === id)
     {
@@ -576,6 +739,56 @@ onTouchStart(id,e)
     }
     if("optionsResume" === id)
     {
+      gameNamespace.gamestate = gameNamespace.GamestateEnum.GAME;
+    }
+    if("optionsSound" === id)
+    {
+        if(document.getElementById("optionsSound").style.color === "green")
+        {
+          document.getElementById("optionsSound").style.color = "red";
+        }
+        else {
+          document.getElementById("optionsSound").style.color = "green";
+        }
+    }
+    if("optionsMusic" === id)
+    {
+        if(document.getElementById("optionsMusic").style.color === "green")
+        {
+          document.getElementById("optionsMusic").style.color = "red";
+          gameNamespace.BackgroundMusic.pause();
+        }
+        else {
+          document.getElementById("optionsMusic").style.color = "green";
+          gameNamespace.BackgroundMusic.addEventListener('ended', function() {
+          this.currentTime = 0;
+          this.play();
+          }, false);
+          gameNamespace.BackgroundMusic.play();
+        }
+    }
+    if("difficultyEasy" === id)
+    {
+      document.getElementById("difficultyEasy").style.color = "green";
+      document.getElementById("difficultyMedium").style.color = "white";
+      document.getElementById("difficultyHard").style.color = "white";
+      gameNamespace.currentAsteroidMoveSpeed = 1;
+      gameNamespace.gamestate = gameNamespace.GamestateEnum.GAME;
+    }
+    if("difficultyMedium" === id)
+    {
+      document.getElementById("difficultyEasy").style.color = "white";
+      document.getElementById("difficultyMedium").style.color = "green";
+      document.getElementById("difficultyHard").style.color = "white";
+      gameNamespace.currentAsteroidMoveSpeed = 2;
+      gameNamespace.gamestate = gameNamespace.GamestateEnum.GAME;
+    }
+    if("difficultyHard" === id)
+    {
+      document.getElementById("difficultyEasy").style.color = "white";
+      document.getElementById("difficultyMedium").style.color = "white";
+      document.getElementById("difficultyHard").style.color = "green";
+      gameNamespace.currentAsteroidMoveSpeed = 3;
       gameNamespace.gamestate = gameNamespace.GamestateEnum.GAME;
     }
     if("GAMERESTART" === id)
