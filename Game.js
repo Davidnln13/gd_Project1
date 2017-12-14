@@ -116,24 +116,26 @@ class Game
     this.createDiv("Restart", "GAMERESTART",125,450,true);
     this.createDiv("Main Menu", "GAMEMAINMENU",125,500,true);
     //options
-    this.createDiv("PLAY","optionsResume",165,450,true);
-    this.createDiv("MAIN MENU","optionsMain",165,550,true);
+    this.createDiv("PLAY","optionsResume",110,450,true);
+    this.createDiv("MAIN MENU","optionsMain",110,550,true);
     this.createDiv("SOUND","optionsSound",105,250,true);
     this.createDiv("MUSIC","optionsMusic",305,250,true);
     //difficulty screen
-    this.createDiv("EASY","difficultyEasy",165,200,true);
-    this.createDiv("MEDIUM","difficultyMedium",165,300,true);
-    this.createDiv("HARD","difficultyHard",165,400,true);
+    this.createDiv("EASY","difficultyEasy",110,200,true);
+    this.createDiv("MEDIUM","difficultyMedium",110,300,true);
+    this.createDiv("HARD","difficultyHard",110,400,true);
     //HIGHSCORE
     gameNamespace.currentHighest = "";
     gameNamespace.currentHighestDifficulty = "";
-    this.createDiv("Current Best","highscoreCurrent",165,100,false);
-    this.createDiv(gameNamespace.currentHighest,"highscoreOutputN",165,250,false);
-    this.createDiv(gameNamespace.currentHighestDifficulty,"highscoreOutputD",165,300,false);
-    this.createDiv("MAIN MENU", "highscoreMainMenu", 165,400,true);
+    this.createDiv("Current Best","highscoreCurrent",110,100,false);
+    this.createDiv(gameNamespace.currentHighest,"highscoreOutputN",110,250,false);
+    this.createDiv(gameNamespace.currentHighestDifficulty,"highscoreOutputD",110,300,false);
+    this.createDiv("MAIN MENU", "highscoreMainMenu", 110,400,true);
     //tutorial
     //this.createDiv("Swipe left to move Left", "tutorialMessage",105,200,false);
     //list to hold text divs on main menu
+    //powerups slow time avoidcollision bullet double points
+    this.createDiv("")
     gameNamespace.difficultyScreenDivs = ["difficultyEasy","difficultyMedium","difficultyHard"];
     gameNamespace.mainMenuTextDivs = ["MAIN","GAME","OPTIONS","TUTORIAL","HIGHSCORE","EXIT"];
     gameNamespace.playGameDivs = ["optionsSymbol", "PLAYER", "PLAYSCORE", "ASTEROIDONE", "ASTEROIDTWO", "ASTEROIDTHREE","EXPLOSION"];
@@ -187,10 +189,6 @@ class Game
           }
       }, false);
   }
-SoundLoaded()
-{
-  gameNamespace.soundManager.playSound(gameNamespace.BackgroundMusic["BackgroundMusic"],true,1);
-}
  /**
  * update
  * @desc calls draw and itself recursively also updates animations
@@ -218,6 +216,9 @@ SoundLoaded()
    //if were in the play gamestate
    if(gameNamespace.gamestate === 1)
    {
+
+     document.getElementById("PLAYER").style.opacity = "0.5";
+
      //scalable difficulty
      if(gameNamespace.score > 50)
      {
@@ -251,6 +252,7 @@ SoundLoaded()
      }
      if(gameNamespace.explode === true)
      {
+       document.getElementById("optionsSymbol").style.visibility = "hidden";
        if(parseInt(gameNamespace.score) > gameNamespace.currentHighest)
        {
          gameNamespace.currentHighest = parseInt(gameNamespace.score);
@@ -351,7 +353,8 @@ SoundLoaded()
  }
  Reset()
  {
-  document.getElementById("optionsResume").innerHTML = "Play";
+  document.getElementById("optionsSymbol").style.visibility = "visible";
+  document.getElementById("optionsResume").innerHTML = "PLAY";
   gameNamespace.alive = false;
   gameNamespace.explode = false;
   gameNamespace.score = 0;
@@ -634,7 +637,7 @@ UpdateMenus()
    {
      gameNamespace.alive = true;
      gameNamespace.flipOnce = true;
-     document.getElementById("optionsResume").innerHTML = "Resume";
+     document.getElementById("optionsResume").innerHTML = "RESUME";
      gameNamespace.game.flipVisibility(gameNamespace.mainMenuTextDivs,false);
      gameNamespace.game.flipVisibility(gameNamespace.playGameDivs,true);
      gameNamespace.game.flipVisibility(gameNamespace.optionisDivs, false);
