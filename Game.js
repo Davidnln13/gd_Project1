@@ -132,7 +132,10 @@ class Game
     this.createDiv(gameNamespace.currentHighestDifficulty,"highscoreOutputD",110,300,false);
     this.createDiv("MAIN MENU", "highscoreMainMenu", 110,400,true);
     //tutorial
-    //this.createDiv("Swipe left to move Left", "tutorialMessage",105,200,false);
+    gameNamespace.tutorialMessageNumber = 0;
+    this.createDiv("Swipe left to move Left", "tutorialMessage",85,150,false);
+    this.createDiv("PLAY", "tutorialPlay",200,450,true);
+
     //list to hold text divs on main menu
     //powerups slow time avoidcollision bullet double points
     this.createDiv("")
@@ -141,6 +144,7 @@ class Game
     gameNamespace.playGameDivs = ["optionsSymbol", "PLAYER", "PLAYSCORE", "ASTEROIDONE", "ASTEROIDTWO", "ASTEROIDTHREE","EXPLOSION"];
     gameNamespace.optionisDivs = ["optionsMain","optionsResume","optionsSound","optionsMusic"];
     gameNamespace.gameOverDivs = ["GAMEOVER","GAMERESTART","GAMEMAINMENU"];
+    gameNamespace.tutorialDivs =["tutorialMessage"];
     gameNamespace.highscoreDivs = ["highscoreCurrent","highscoreOutputN","highscoreOutputD","highscoreMainMenu"];
     //initialise visibility
     gameNamespace.flipOnce = false;
@@ -148,6 +152,7 @@ class Game
     gameNamespace.game.flipVisibility(gameNamespace.optionisDivs, false);
     gameNamespace.game.flipVisibility(gameNamespace.gameOverDivs, false);
     gameNamespace.game.flipVisibility(gameNamespace.difficultyScreenDivs, false);
+    gameNamespace.game.flipVisibility(gameNamespace.tutorialDivs, false);
     gameNamespace.game.flipVisibility(gameNamespace.highscoreDivs,false);
     //font and font size of Divs main
     gameNamespace.game.divFontColourSize("MAIN","impact","white","48");
@@ -176,8 +181,10 @@ class Game
     gameNamespace.game.divFontColourSize("highscoreOutputN","impact","white","38");
     gameNamespace.game.divFontColourSize("highscoreOutputD","impact","white","38");
     gameNamespace.game.divFontColourSize("highscoreMainMenu","impact","white","38");
-    ///this.ctx.addEventListener("touchmove", this.onTouchMove.bind(this));
-    ///this.ctx.addEventListener("touchend", onTouchEnd);
+    //tutorial
+    gameNamespace.game.divFontColourSize("tutorialMessage", "impact", "white", "38");
+    gameNamespace.game.divFontColourSize("tutorialPlay", "impact", "white", "38");
+    document.getElementById("tutorialPlay").style.visibility = "hidden";
   //  gameNamespace.canvas.addEventListener("touchstart", this.onTouchStart.bind(this));
     window.addEventListener("keydown", function(e)
       {
@@ -213,11 +220,75 @@ class Game
    gameNamespace.game.draw();
    //update menus
    gameNamespace.game.UpdateMenus();
+   //if in tutorial
+   if(gameNamespace.gamestate === 3)
+   {
+     if(gameNamespace.alive === false)
+     {
+        gameNamespace.game.flipVisibility(gameNamespace.gameOverDivs);
+     }
+     if(gameNamespace.movingLeft === true)
+     {
+       if(gameNamespace.tutorialMessageNumber === 0)
+       {
+         document.getElementById("tutorialMessage").style.left = 60 + "px";
+         document.getElementById("tutorialMessage").innerHTML = "Swipe right to move right";
+         gameNamespace.tutorialMessageNumber =1;
+       }
+          //if were already left
+         if(gameNamespace.currentPosition === gameNamespace.PlayerPosEnum.LEFT)
+         {
+           gameNamespace.movingLeft = false;
+         }
+         //if were mid
+         if(gameNamespace.currentPosition === gameNamespace.PlayerPosEnum.MID)
+         {
+           //move from mid to left
+           gameNamespace.game.MoveLeft(gameNamespace.PlayerPosEnum.MID,gameNamespace.PlayerPosEnum.LEFT);
+         }
+         if(gameNamespace.currentPosition === gameNamespace.PlayerPosEnum.RIGHT)
+         {
+           //move from right to mid
+           gameNamespace.game.MoveLeft(gameNamespace.PlayerPosEnum.RIGHT,gameNamespace.PlayerPosEnum.MID);
+         }
+     }
+     //if were moving right
+     if(gameNamespace.movingRight === true)
+     {
+       if(gameNamespace.tutorialMessageNumber === 1)
+       {
+        document.getElementById("tutorialMessage").style.left = 120 + "px";
+         document.getElementById("tutorialMessage").innerHTML = "Dodge Asteroids";
+         gameNamespace.tutorialMessageNumber =2;
+       }
+          //if were left
+         if(gameNamespace.currentPosition === gameNamespace.PlayerPosEnum.LEFT)
+         {
+           //move from left to MID
+           gameNamespace.game.MoveRight(gameNamespace.PlayerPosEnum.LEFT,gameNamespace.PlayerPosEnum.MID);
+         }
+         //if were mid
+         if(gameNamespace.currentPosition === gameNamespace.PlayerPosEnum.MID)
+         {
+           //move from mid to Right
+           gameNamespace.game.MoveRight(gameNamespace.PlayerPosEnum.MID,gameNamespace.PlayerPosEnum.RIGHT);
+         }
+         //if were already right
+         if(gameNamespace.currentPosition === gameNamespace.PlayerPosEnum.RIGHT)
+         {
+           gameNamespace.movingRight = false;
+         }
+     }
+     if(gameNamespace.tutorialMessageNumber === 2)
+     {
+        document.getElementById("tutorialPlay").style.visibility = "visible";
+     }
+   }
    //if were in the play gamestate
    if(gameNamespace.gamestate === 1)
    {
-
-     document.getElementById("PLAYER").style.opacity = "0.5";
+     //shielded
+     // document.getElementById("PLAYER").style.opacity = "0.5";
 
      //scalable difficulty
      if(gameNamespace.score > 50)
@@ -376,7 +447,7 @@ class Game
       document.getElementById(gameNamespace.asteroids[i]).style.top = gameNamespace.asteroidPosY[i] + "px";
       if(gameNamespace.asteroidPosY[i] > 900)
       {
-        gameNamespace.game.SpawnAsteroid(gameNamespace.asteroids[i],i,false);
+          gameNamespace.game.SpawnAsteroid(gameNamespace.asteroids[i],i,false);
       }
    }
 
@@ -558,7 +629,7 @@ divFontColourSize(name,font,colour,size)
 canvasStart(e)
 {
   e.preventDefault();
-  if(gameNamespace.gamestate === 1)
+  if(gameNamespace.gamestate === 1 || gameNamespace.gamestate === 3)
   {
     var touches = e.touches;
     gameNamespace.startingPosX = touches[0].clientX;
@@ -568,7 +639,7 @@ canvasStart(e)
 }
 canvasMove(e)
 {
-  if(gameNamespace.gamestate === 1)
+  if(gameNamespace.gamestate === 1|| gameNamespace.gamestate === 3)
   {
     e.preventDefault();
     var touches = e.touches;
@@ -579,7 +650,7 @@ canvasMove(e)
 canvasEnd(e)
 {
   e.preventDefault();
-  if(gameNamespace.gamestate === 1 && gameNamespace.endingPosX !== -100)
+  if((gameNamespace.gamestate === 1 || gameNamespace.gamestate === 3) &&gameNamespace.endingPosX !== -100)
   {
     gameNamespace.endingTime = new Date();
     gameNamespace.swipeLength = Math.sqrt((
@@ -602,6 +673,7 @@ canvasEnd(e)
         {
           if(document.getElementById("PLAYER").style.visibility === "visible")
           {
+
            gameNamespace.movingLeft = true;
           }
         }
@@ -628,6 +700,7 @@ UpdateMenus()
      gameNamespace.game.flipVisibility(gameNamespace.gameOverDivs,false);
      gameNamespace.game.flipVisibility(gameNamespace.difficultyScreenDivs,false);
      gameNamespace.game.flipVisibility(gameNamespace.highscoreDivs,false);
+     gameNamespace.game.flipVisibility(gameNamespace.tutorialDivs,false);
    }
  }
  //play
@@ -644,6 +717,7 @@ UpdateMenus()
      gameNamespace.game.flipVisibility(gameNamespace.gameOverDivs,false);
      gameNamespace.game.flipVisibility(gameNamespace.difficultyScreenDivs,false);
      gameNamespace.game.flipVisibility(gameNamespace.highscoreDivs,false);
+     gameNamespace.game.flipVisibility(gameNamespace.tutorialDivs,false);
    }
  }
  //options
@@ -658,6 +732,24 @@ UpdateMenus()
      gameNamespace.game.flipVisibility(gameNamespace.gameOverDivs,false);
      gameNamespace.game.flipVisibility(gameNamespace.difficultyScreenDivs,false);
      gameNamespace.game.flipVisibility(gameNamespace.highscoreDivs,false);
+          gameNamespace.game.flipVisibility(gameNamespace.tutorialDivs,false);
+   }
+ }
+ //tutorial
+ if(gameNamespace.gamestate === 3)
+ {
+   if(gameNamespace.flipOnce === false)
+   {
+      gameNamespace.alive = true;
+     gameNamespace.flipOnce = true;
+     gameNamespace.game.flipVisibility(gameNamespace.mainMenuTextDivs,false);
+     gameNamespace.game.flipVisibility(gameNamespace.playGameDivs,false);
+     gameNamespace.game.flipVisibility(gameNamespace.optionisDivs, false);
+     gameNamespace.game.flipVisibility(gameNamespace.gameOverDivs,false);
+     gameNamespace.game.flipVisibility(gameNamespace.difficultyScreenDivs,false);
+     gameNamespace.game.flipVisibility(gameNamespace.highscoreDivs,false);
+     gameNamespace.game.flipVisibility(gameNamespace.tutorialDivs,true);
+     document.getElementById("PLAYER").style.visibility = "visible";
    }
  }
  //highscore
@@ -672,6 +764,7 @@ UpdateMenus()
      gameNamespace.game.flipVisibility(gameNamespace.gameOverDivs,false);
      gameNamespace.game.flipVisibility(gameNamespace.difficultyScreenDivs,false);
      gameNamespace.game.flipVisibility(gameNamespace.highscoreDivs,true);
+     gameNamespace.game.flipVisibility(gameNamespace.tutorialDivs,false);
    }
  }
  //difficulty
@@ -686,6 +779,7 @@ UpdateMenus()
      gameNamespace.game.flipVisibility(gameNamespace.gameOverDivs,false);
      gameNamespace.game.flipVisibility(gameNamespace.difficultyScreenDivs,true);
      gameNamespace.game.flipVisibility(gameNamespace.highscoreDivs,false);
+     gameNamespace.game.flipVisibility(gameNamespace.tutorialDivs,false);
    }
  }
 }
@@ -702,6 +796,14 @@ onTouchStart(id,e)
     if("OPTIONS" === id)
     {
       gameNamespace.gamestate = gameNamespace.GamestateEnum.OPTIONS;
+    }
+    if("tutorialPlay" === id)
+    {
+      gameNamespace.tutorialMessageNumber = 0;
+      document.getElementById("tutorialMessage").style.left = 85 + "px";
+      document.getElementById("tutorialMessage").innerHTML = "Swipe left to move Left";
+      document.getElementById("tutorialPlay").style.visibility = "hidden";
+      gameNamespace.gamestate = gameNamespace.GamestateEnum.DIFFICULTY;
     }
     if("TUTORIAL" === id)
     {
